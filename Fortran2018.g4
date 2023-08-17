@@ -20,7 +20,7 @@ NON_CONTROL_CHAR: ~[\u0000-\u001F];
 
 ESCAPE_SEQUENCE: '\\' ('\\' | 'n' | 't' | '"');
 
-// R401 xzy-list -> xzy [, xzy]...
+// R401 xyz-list -> xyz [, xyz]...
 typeAttrSpecList: (typeAttrSpec)+;
 
 typeParamNameList: (typeParamName)+;
@@ -185,7 +185,7 @@ actualArgSpecList: (actualArgSpec)+;
 
 dummyArgList: (dummyArg)+;
 
-// R402 xzy-name -> name
+// R402 xyz-name -> name
 typeName: name;
 
 typeParamName: name;
