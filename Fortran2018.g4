@@ -1,47 +1,17 @@
 grammar Fortran2018;
 
 // R0001 digit -> 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
-digit:
-	'0'
-	| '1'
-	| '2'
-	| '3'
-	| '4'
-	| '5'
-	| '6'
-	| '7'
-	| '8'
-	| '9';
+digit: DIGIT;
 
-// R0002 letter -> A | B | C | D | E | F | G | H | I | J | K | L | M | N | O | P | Q | R | S | T | U
-// | V | W | X | Y | Z
-letter:
-	'A'
-	| 'B'
-	| 'C'
-	| 'D'
-	| 'E'
-	| 'F'
-	| 'G'
-	| 'H'
-	| 'I'
-	| 'J'
-	| 'K'
-	| 'L'
-	| 'M'
-	| 'N'
-	| 'O'
-	| 'P'
-	| 'Q'
-	| 'R'
-	| 'S'
-	| 'T'
-	| 'U'
-	| 'V'
-	| 'W'
-	| 'X'
-	| 'Y'
-	| 'Z';
+fragment DIGIT: '0'..'9';
+
+// R0002 letter ->
+//         A | B | C | D | E | F | G | H | I | J | K | L | M |
+//         N | O | P | Q | R | S | T | U | V | W | X | Y | Z
+letter: UPPER_LETTER | LOWER_LETTER;
+
+fragment UPPER_LETTER: 'A'..'Z';
+fragment LOWER_LETTER: 'a'..'z';
 
 //R0003 repChar
 repChar: NON_CONTROL_CHAR | ESCAPE_SEQUENCE;
