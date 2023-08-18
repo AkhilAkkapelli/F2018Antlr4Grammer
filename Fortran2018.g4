@@ -1,24 +1,27 @@
 grammar Fortran2018;
 
+//COMMENT
+LINE_COMMENT : '!' .*? '\r'? '\n' -> skip ;
+BLOCK_COMMENT: '/*' .*? '*/' -> skip;
+
+//WHITESPACE
+WS: [ \t\r\n]+ -> skip;
+
 // R0001 digit -> 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 digit: DIGIT;
-
-fragment DIGIT: '0'..'9';
+DIGIT: '0'..'9';
 
 // R0002 letter ->
 //         A | B | C | D | E | F | G | H | I | J | K | L | M |
 //         N | O | P | Q | R | S | T | U | V | W | X | Y | Z
-letter: UPPER_LETTER | LOWER_LETTER;
-
-fragment UPPER_LETTER: 'A'..'Z';
-fragment LOWER_LETTER: 'a'..'z';
+letter: LETTER;
+LETTER: 'A'..'Z' | 'a'..'z';
 
 //R0003 repChar
 repChar: NON_CONTROL_CHAR | ESCAPE_SEQUENCE;
-
 NON_CONTROL_CHAR: ~[\u0000-\u001F];
-
 ESCAPE_SEQUENCE: '\\' ('\\' | 'n' | 't' | '"');
+
 
 // R401 xyz-list -> xyz [, xyz]...
 typeAttrSpecList: (typeAttrSpec)+;
@@ -289,7 +292,7 @@ intVariableName: name;
 // R403 scalar-xyz -> xyz
 scalarIntExpr: intExpr;
 
-scalarIntConstantExpr: intConstantExpr;
+scalarIntConstantExpr: intConstantExpr; 
 
 scalarDefaultCharConstantExpr: defaultCharConstantExpr;
 
@@ -311,6 +314,7 @@ scalarIntVariable: intVariable;
 
 scalarDefaultCharVariable: defaultCharVariable;
 
+//LEFT RECURSION RESOLVED
 scalarVariable: variable;
 
 scalarExpr: expr;
@@ -331,6 +335,7 @@ scalarVariableName: variableName;
 
 scalarIntVariableName: intVariableName;
 
+
 //R501 program -> program-unit [program-unit]...    
 program: programUnit (programUnit)*;
 
@@ -348,9 +353,7 @@ externalSubprogram: functionSubprogram | subroutineSubprogram;
 //R504 specification-part -> [use-stmt]... [import-stmt]... [implicit-part]
 // [declaration-construct]...
 specificationPart:
-	(useStmt)* (importStmt)* (implicitPart)? (
-		declarationConstruct
-	)*;
+    (useStmt)* (importStmt)* (implicitPart)? (declarationConstruct)*;
 
 //R505 implicit-part -> [implicit-part-stmt]... implicit-stmt
 implicitPart: (implicitPartStmt)* implicitStmt;
@@ -492,10 +495,12 @@ actionStmt:
 // R516 keyword -> name
 keyword: name;
 
-// R601 alphanumeric-character -> letter | digit | UNDERSCORE 
-alphanumericCharacter: letter | digit | UNDERSCORE;
+
+// R601 alphanumeric-character -> letter | digit | underscore
+alphanumericCharacter: LETTER | DIGIT | UNDERSCORE;
 
 // R602 UNDERSCORE -> _
+underscore: UNDERSCORE;
 UNDERSCORE: '_';
 
 // R603 name -> letter [alphanumeric-character]...
@@ -548,6 +553,7 @@ label: digit (digit)*;
 // R620 delimiter -> ( | ) | / | [ | ] | (/ | /)
 delimiter: '(' | ')' | '/' | '[' | ']' | '(/' | '/)';
 
+
 // R701 type-param-value -> scalar-int-expr | * | :
 typeParamValue: scalarIntExpr | '*' | ':';
 
@@ -584,7 +590,8 @@ kindSelector: '(' ('KIND' '=')? scalarIntConstantExpr ')';
 signedIntLiteralConstant: sign? intLiteralConstant;
 
 // R708 int-literal-constant -> digit-string [_ kind-param]
-intLiteralConstant: digitString ('_' kindParam)?;
+intLiteralConstant:
+    digitString ('_' kindParam)?;
 
 // R709 kind-param -> digit-string | scalar-int-constant-name
 kindParam: digitString | scalarIntConstantName;
@@ -638,9 +645,7 @@ charSelector:
 	lengthSelector
 	| '(' 'LEN' '=' typeParamValue ',' 'KIND' '=' scalarIntConstantExpr ')'
 	| '(' typeParamValue ',' ('KIND' '=')? scalarIntConstantExpr ')'
-	| '(' 'KIND' '=' scalarIntConstantExpr (
-		',' 'LEN' '=' typeParamValue
-	)? ')';
+	| '(' 'KIND' '=' scalarIntConstantExpr (',' 'LEN' '=' typeParamValue)? ')';
 
 // R722 length-selector -> ( [LEN =] type-param-value ) | * char-length [,]
 lengthSelector:
@@ -662,14 +667,11 @@ logicalLiteralConstant:
 // R726 derived-type-def -> derived-type-stmt [type-param-def-stmt]... [private-or-sequence]...
 // [component-part] [type-bound-procedure-part] end-type-stmt
 derivedTypeDef:
-	derivedTypeStmt (typeParamDefStmt)* (privateOrSequence)* componentPart? typeBoundProcedurePart?
-		endTypeStmt;
+	derivedTypeStmt (typeParamDefStmt)* (privateOrSequence)* componentPart? typeBoundProcedurePart? endTypeStmt;
 
 // R727 derived-type-stmt -> TYPE [[, type-attr-spec-list] ::] type-name [( type-param-name-list )]
 derivedTypeStmt:
-	'TYPE' ((',' typeAttrSpecList)? '::')? typeName (
-		'(' typeParamNameList ')'
-	)?;
+    'TYPE' ((',' typeAttrSpecList)? '::')? typeName ('(' typeParamNameList ')')?;
 
 // R728 type-attr-spec -> ABSTRACT | access-spec | BIND(C) | EXTENDS ( parent-type-name )
 typeAttrSpec:
@@ -721,9 +723,7 @@ componentAttrSpec:
 // R739 component-decl -> component-name [( component-array-spec )] [lbracket coarray-spec rbracket]
 // [* char-length] [component-initialization]
 componentDecl:
-	componentName ('(' componentArraySpec ')')? (
-		lbracket coarraySpec rbracket
-	)? ('*' charLength)? componentInitialization?;
+	componentName ('(' componentArraySpec ')')? (lbracket coarraySpec rbracket)? ('*' charLength)? componentInitialization?;
 
 // R740 component-array-spec -> explicit-shape-spec-list | deferred-shape-spec-list
 componentArraySpec:
@@ -863,16 +863,15 @@ acImpliedDo: '(' acValueList ',' acImpliedDoControl ')';
 // R775 ac-implied-do-control -> [integer-type-spec ::] ac-do-variable = scalar-int-expr ,
 // scalar-int-expr [, scalar-int-expr]
 acImpliedDoControl:
-	(integerTypeSpec '::')? acDoVariable '=' scalarIntExpr ',' scalarIntExpr (
-		',' scalarIntExpr
-	)?;
+    (integerTypeSpec '::')? acDoVariable '=' scalarIntExpr ',' scalarIntExpr (',' scalarIntExpr)?;
 
 // R776 ac-do-variable -> do-variable
 acDoVariable: doVariable;
 
+
 // R801 type-declaration-stmt -> declaration-type-spec [[, attr-spec]... ::] entity-decl-list
 typeDeclarationStmt:
-	declarationTypeSpec ((',' attrSpec)* '::')? entityDeclList;
+    declarationTypeSpec ((',' attrSpec)* '::')? entityDeclList;
 
 // R802 attr-spec -> access-spec | ALLOCATABLE | ASYNCHRONOUS | CODIMENSION lbracket coarray-spec
 // rbracket | CONTIGUOUS | DIMENSION ( array-spec ) | EXTERNAL | INTENT ( intent-spec ) | INTRINSIC
@@ -901,9 +900,7 @@ attrSpec:
 // R803 entity-decl -> object-name [( array-spec )] [lbracket coarray-spec rbracket] [* char-length]
 // [initialization] | function-name [* char-length]
 entityDecl:
-	objectName ('(' arraySpec ')')? (
-		lbracket coarraySpec rbracket
-	)? ('*' charLength)? (initialization)?
+	objectName ('(' arraySpec ')')? (lbracket coarraySpec rbracket)? ('*' charLength)? (initialization)?
 	| functionName ('*' charLength)?;
 
 // R804 object-name -> name
@@ -932,9 +929,7 @@ coarraySpec: deferredCoShapeSpecList | explicitCoShapeSpec;
 deferredCoShapeSpec: ':';
 
 // R811 explicit-coshape-spec -> [[lower-cobound :] upper-cobound ,]... [lower-cobound :] *
-explicitCoShapeSpec: ((lowerCoBound ':')? upperCoBound ',')* (
-		lowerCoBound? ':'
-	)? '*';
+explicitCoShapeSpec: ((lowerCoBound ':')? upperCoBound ',')* (lowerCoBound? ':')? '*';
 
 // R812 lower-cobound -> specification-expr
 lowerCoBound: specificationExpr;
@@ -999,10 +994,7 @@ accessId: accessName | genericSpec;
 allocatableStmt: 'ALLOCATABLE' '::'? allocatableDeclList;
 
 // R830 allocatable-decl -> object-name [( array-spec )] [lbracket coarray-spec rbracket]
-allocatableDecl:
-	objectName ('(' arraySpec ')')? (
-		lbracket coarraySpec rbracket
-	)?;
+allocatableDecl: objectName ('(' arraySpec ')')? (lbracket coarraySpec rbracket)?;
 
 // R831 asynchronous-stmt -> ASYNCHRONOUS [::] object-name-list
 asynchronousStmt: 'ASYNCHRONOUS' '::'? objectNameList;
@@ -1072,18 +1064,17 @@ constantSubobject: designator;
 
 // R848 dimension-stmt -> DIMENSION [::] array-name ( array-spec ) [, array-name ( array-spec )]...
 dimensionStmt:
-	'DIMENSION' '::'? arrayName '(' arraySpec ')' (
-		',' arrayName '(' arraySpec ')'
-	)*;
+	'DIMENSION' '::'? arrayName '(' arraySpec ')' (',' arrayName '(' arraySpec ')')*;
 
 // R849 intent-stmt -> INTENT ( intent-spec ) [::] dummy-arg-name-list
-intentStmt: 'INTENT' '(' intentSpec ')' '::'? dummyArgNameList;
+intentStmt:
+	'INTENT' '(' intentSpec ')' '::'? dummyArgNameList;
 
 // R850 optional-stmt -> OPTIONAL [::] dummy-arg-name-list
 optionalStmt: 'OPTIONAL' '::'? dummyArgNameList;
 
 // R851 parameter-stmt -> PARAMETER ( named-constant-def-list )
-parameterStmt: 'PARAMETER' '(' namedConstantDefList ')';
+parameterStmt:  'PARAMETER' '(' namedConstantDefList ')';
 
 // R852 named-constant-def -> named-constant = constant-expr
 namedConstantDef: namedConstant '=' constantExpr;
@@ -1092,9 +1083,7 @@ namedConstantDef: namedConstant '=' constantExpr;
 pointerStmt: 'POINTER' '::'? pointerDeclList;
 
 // R854 pointer-decl -> object-name [( deferred-shape-spec-list )] | proc-entity-name
-pointerDecl:
-	objectName ('(' deferredShapeSpecList ')')?
-	| procEntityName;
+pointerDecl:  objectName ('(' deferredShapeSpecList ')')? | procEntityName;
 
 // R855 protected-stmt -> PROTECTED [::] entity-name-list
 protectedStmt: 'PROTECTED' '::'? entityNameList;
@@ -1116,9 +1105,7 @@ targetStmt: 'TARGET' '::'? targetDeclList;
 
 // R860 target-decl -> object-name [( array-spec )] [lbracket coarray-spec rbracket]
 targetDecl:
-	objectName ('(' arraySpec ')')? (
-		lbracket coarraySpec rbracket
-	)?;
+	objectName ('(' arraySpec ')')? (lbracket coarraySpec rbracket)?;
 
 // R861 value-stmt -> VALUE [::] dummy-arg-name-list
 valueStmt: 'VALUE' '::'? dummyArgNameList;
@@ -1129,7 +1116,7 @@ volatileStmt: 'VOLATILE' '::'? objectNameList;
 // R863 implicit-stmt -> IMPLICIT implicit-spec-list | IMPLICIT NONE [( [implicit-name-spec-list] )]
 implicitStmt:
 	'IMPLICIT' implicitSpecList
-	| 'IMPLICIT' 'NONE' ('(' implicitNameSpecList? ')')?;
+	| 'IMPLICIT' 'NONE' ( '(' implicitNameSpecList? ')' )?;
 
 // R864 implicit-spec -> declaration-type-spec ( letter-spec-list )
 implicitSpec: declarationTypeSpec '(' letterSpecList ')';
@@ -1178,18 +1165,18 @@ commonStmt:
 // R874 common-block-object -> variable-name [( array-spec )]
 commonBlockObject: variableName ( '(' arraySpec ')')?;
 
-// R901 designator -> object-name | array-element | array-section | coindexed-named-object |
-// complex-part-designator | structure-component | substring
-designator:
-	objectName
-	| arrayElement
-	| arraySection
-	| coindexedNamedObject
-	| complexPartDesignator
-	| structureComponent
-	| substring;
+
+// R901 designator ->
+//        object-name | array-element | array-section |
+//        coindexed-named-object | complex-part-designator |
+//        structure-component | substring
+// R918 array-section ->
+//        data-ref [( substring-range )] | complex-part-designator
+//LEFT RECURSION RESOLVED
+designator: objectName | arrayElement | dataRef ('(' substringRange ')')? | coindexedNamedObject | designator complexPartDesignator | structureComponent | substring;
 
 // R902 variable -> designator | function-reference
+//LEFT RECURSION RESOLVED
 variable: designator | functionReference;
 
 // R903 variable-name -> name
@@ -1210,15 +1197,13 @@ intVariable: variable;
 // R908 substring -> parent-string ( substring-range )
 substring: parentString '(' substringRange ')';
 
-// R909 parent-string -> scalar-variable-name | array-element | coindexed-named-object |
-// scalar-structure-component | scalar-char-literal-constant | scalar-named-constant
-parentString:
-	scalarVariableName
-	| arrayElement
-	| coindexedNamedObject
-	| scalarStructureComponent
-	| scalarCharLiteralConstant
-	| scalarNamedConstant;
+// R909 parent-string ->
+//        scalar-variable-name | array-element | coindexed-named-object |
+//        scalar-structure-component | scalar-char-literal-constant |
+//        scalar-named-constant
+parentString: scalarVariableName | arrayElement | coindexedNamedObject
+    | scalarStructureComponent | scalarCharLiteralConstant
+    | scalarNamedConstant;
 
 // R910 substring-range -> [scalar-int-expr] : [scalar-int-expr]
 substringRange: scalarIntExpr? ':' scalarIntExpr?;
@@ -1227,8 +1212,7 @@ substringRange: scalarIntExpr? ':' scalarIntExpr?;
 dataRef: partRef ('%' partRef)*;
 
 // R912 part-ref -> part-name [( section-subscript-list )] [image-selector]
-partRef:
-	partName ('(' sectionSubscriptList ')')? imageSelector?;
+partRef: partName ('(' sectionSubscriptList ')')? imageSelector?;
 
 // R913 structure-component -> data-ref
 structureComponent: dataRef;
@@ -1237,7 +1221,8 @@ structureComponent: dataRef;
 coindexedNamedObject: dataRef;
 
 // R915 complex-part-designator -> designator % RE | designator % IM
-complexPartDesignator: designator '%' ('RE' | 'IM');
+//LEFT RECURSION RESOLVED
+complexPartDesignator: '%' ('RE' | 'IM');
 
 // R916 type-param-inquiry -> designator % type-param-name
 typeParamInquiry: designator '%' typeParamName;
@@ -1245,22 +1230,19 @@ typeParamInquiry: designator '%' typeParamName;
 // R917 array-element -> data-ref
 arrayElement: dataRef;
 
-// R918 array-section -> data-ref [( substring-range )] | complex-part-designator
-arraySection:
-	dataRef ('(' substringRange ')')?
-	| complexPartDesignator;
+// // R918 array-section ->
+// //        data-ref [( substring-range )] | complex-part-designator
+// //LEFT RECURSION RESOLVED
+// arraySection: dataRef ('(' substringRange ')')? | complexPartDesignator;
 
 // R919 subscript -> scalar-int-expr
 subscript: scalarIntExpr;
 
 // R920 section-subscript -> subscript | subscript-triplet | vector-subscript
-sectionSubscript:
-	subscript
-	| subscriptTriplet
-	| vectorSubscript;
+sectionSubscript: subscript | subscriptTriplet | vectorSubscript;
 
 // R921 subscript-triplet -> [subscript] : [subscript] [: stride]
-subscriptTriplet: subscript? ':' subscript? (':' stride)?;
+subscriptTriplet:  subscript? ':' subscript? (':' stride)?;
 
 // R922 stride -> scalar-int-expr
 stride: scalarIntExpr;
@@ -1268,33 +1250,34 @@ stride: scalarIntExpr;
 // R923 vector-subscript -> int-expr
 vectorSubscript: intExpr;
 
-// R924 image-selector -> lbracket cosubscript-list [, image-selector-spec-list] rbracket
-imageSelector:
-	lbracket cosubscriptList (',' imageSelectorSpecList)? rbracket;
+// R924 image-selector ->
+//        lbracket cosubscript-list [, image-selector-spec-list] rbracket
+imageSelector: lbracket cosubscriptList (',' imageSelectorSpecList)? rbracket;
 
 // R925 cosubscript -> scalar-int-expr
 cosubscript: scalarIntExpr;
 
-// R926 image-selector-spec -> STAT = stat-variable | TEAM = team-value | TEAM_NUMBER =
-// scalar-int-expr
+// R926 image-selector-spec ->
+//        STAT = stat-variable | TEAM = team-value |
+//        TEAM_NUMBER = scalar-int-expr
 imageSelectorSpec:
-	'STAT' '=' statVariable
-	| 'TEAM' '=' teamValue
-	| 'TEAM_NUMBER' '=' scalarIntExpr;
+    'STAT' '=' statVariable |
+    'TEAM' '=' teamValue |
+    'TEAM_NUMBER' '=' scalarIntExpr;
 
-// R927 allocate-stmt -> ALLOCATE ( [type-spec ::] allocation-list [, alloc-opt-list] )
+// R927 allocate-stmt ->
+//        ALLOCATE ( [type-spec ::] allocation-list [, alloc-opt-list] )
 allocateStmt:
-	'ALLOCATE' '(' (typeSpec '::')? allocationList (
-		',' allocOptList
-	)? ')';
+    'ALLOCATE' '(' (typeSpec '::')? allocationList (',' allocOptList)? ')';
 
-// R928 alloc-opt -> ERRMSG = errmsg-variable | MOLD = source-expr | SOURCE = source-expr | STAT =
-// stat-variable
+// R928 alloc-opt ->
+//        ERRMSG = errmsg-variable | MOLD = source-expr |
+//        SOURCE = source-expr | STAT = stat-variable
 allocOpt:
-	'ERRMSG' '=' errmsgVariable
-	| 'MOLD' '=' sourceExpr
-	| 'SOURCE' '=' sourceExpr
-	| 'STAT' '=' statVariable;
+    'ERRMSG' '=' errmsgVariable |
+    'MOLD' '=' sourceExpr |
+    'SOURCE' '=' sourceExpr |
+    'STAT' '=' statVariable;
 
 // R929 stat-variable -> scalar-int-variable
 statVariable: scalarIntVariable;
@@ -1305,12 +1288,12 @@ errmsgVariable: scalarDefaultCharVariable;
 // R931 source-expr -> expr
 sourceExpr: expr;
 
-// R932 allocation -> allocate-object [( allocate-shape-spec-list )] [lbracket allocate-coarray-spec
-// rbracket]
+// R932 allocation ->
+//        allocate-object [( allocate-shape-spec-list )]
+//        [lbracket allocate-coarray-spec rbracket]
 allocation:
-	allocateObject ('(' allocateShapeSpecList ')')? (
-		lbracket allocateCoarraySpec rbracket
-	)?;
+    allocateObject ( '(' allocateShapeSpecList ')' )?
+    ( lbracket allocateCoarraySpec rbracket )?;
 
 // R933 allocate-object -> variable-name | structure-component
 allocateObject: variableName | structureComponent;
@@ -1324,9 +1307,10 @@ lowerBoundExpr: scalarIntExpr;
 // R936 upper-bound-expr -> scalar-int-expr
 upperBoundExpr: scalarIntExpr;
 
-// R937 allocate-coarray-spec -> [allocate-coshape-spec-list ,] [lower-bound-expr :] *
+// R937 allocate-coarray-spec ->
+//        [allocate-coshape-spec-list ,] [lower-bound-expr :] *
 allocateCoarraySpec:
-	(allocateCoshapeSpecList ',')? (lowerBoundExpr ':')? '*';
+    (allocateCoshapeSpecList ',')? (lowerBoundExpr ':')? '*';
 
 // R938 allocate-coshape-spec -> [lower-bound-expr :] upper-bound-expr
 allocateCoshapeSpec: (lowerBoundExpr ':')? upperBoundExpr;
@@ -1335,30 +1319,29 @@ allocateCoshapeSpec: (lowerBoundExpr ':')? upperBoundExpr;
 nullifyStmt: 'NULLIFY' '(' pointerObjectList ')';
 
 // R940 pointer-object -> variable-name | structure-component | proc-pointer-name
-pointerObject:
-	variableName
-	| structureComponent
-	| procPointerName;
+pointerObject: variableName | structureComponent | procPointerName;
 
-// R941 deallocate-stmt -> DEALLOCATE ( allocate-object-list [, dealloc-opt-list] )
-deallocateStmt:
-	'DEALLOCATE' '(' allocateObjectList (',' deallocOptList)? ')';
+// R941 deallocate-stmt ->
+//        DEALLOCATE ( allocate-object-list [, dealloc-opt-list] )
+deallocateStmt: 'DEALLOCATE' '(' allocateObjectList (',' deallocOptList)? ')';
 
 // R942 dealloc-opt -> STAT = stat-variable | ERRMSG = errmsg-variable
-deallocOpt: ('STAT' '=' statVariable)
-	| ('ERRMSG' '=' errmsgVariable);
+deallocOpt: ('STAT' '=' statVariable) | ('ERRMSG' '=' errmsgVariable);
 
-// R1001 primary -> literal-constant | designator | array-constructor | structure-constructor |
-// function-reference | type-param-inquiry | type-param-name | ( expr )
+
+// R1001 primary ->
+//         literal-constant | designator | array-constructor |
+//         structure-constructor | function-reference | type-param-inquiry |
+//         type-param-name | ( expr )
 primary:
-	literalConstant
-	| designator
-	| arrayConstructor
-	| structureConstructor
-	| functionReference
-	| typeParamInquiry
-	| typeParamName
-	| '(' expr ')';
+    literalConstant |
+    designator |
+    arrayConstructor |
+    structureConstructor |
+    functionReference |
+    typeParamInquiry |
+    typeParamName |
+    '(' expr ')';
 
 // R1002 level-1-expr -> [defined-unary-op] primary
 level1Expr: definedUnaryOp? primary;
@@ -1367,13 +1350,17 @@ level1Expr: definedUnaryOp? primary;
 definedUnaryOp: '.' letter+ '.';
 
 // R1004 mult-operand -> level-1-expr [power-op mult-operand]
-multOperand: level1Expr (powerOp multOperand)?;
+multOperand:
+    level1Expr (powerOp multOperand)?;
 
 // R1005 add-operand -> [add-operand mult-op] mult-operand
-addOperand: (addOperand multOp)? multOperand;
+//LEFT RECURSION RESOLVED
+addOperand:
+    multOperand | addOperand multOp multOperand;
 
 // R1006 level-2-expr -> [[level-2-expr] add-op] add-operand
-level2Expr: (level2Expr? addOp)? addOperand;
+//LEFT RECURSION RESOLVED
+level2Expr: addOperand | addOp addOperand | level2Expr addOp addOperand;
 
 // R1007 power-op -> **
 powerOp: '**';
@@ -1385,7 +1372,8 @@ multOp: '*' | '/';
 addOp: '+' | '-';
 
 // R1010 level-3-expr -> [level-3-expr concat-op] level-2-expr
-level3Expr: (level3Expr concatOp)? level2Expr;
+//LEFT RECURSION RESOLVED
+level3Expr: level2Expr | level3Expr concatOp level2Expr;
 
 // R1011 concat-op -> //
 concatOp: '//';
@@ -1393,32 +1381,27 @@ concatOp: '//';
 // R1012 level-4-expr -> [level-3-expr rel-op] level-3-expr
 level4Expr: (level3Expr relOp)? level3Expr;
 
-// R1013 rel-op -> .EQ. | .NE. | .LT. | .LE. | .GT. | .GE. | == | /= | < | <= | > | >=
-relOp:
-	'.EQ.'
-	| '.NE.'
-	| '.LT.'
-	| '.LE.'
-	| '.GT.'
-	| '.GE.'
-	| '=='
-	| '/='
-	| '<'
-	| '<='
-	| '>'
-	| '>=';
+// R1013 rel-op ->
+//         .EQ. | .NE. | .LT. | .LE. | .GT. | .GE. |
+//         == | /= | < | <= | > | >=
+relOp: '.EQ.' | '.NE.' | '.LT.' | '.LE.' | '.GT.' | '.GE.' |
+       '==' | '/=' | '<' | '<=' | '>' | '>=';
 
 // R1014 and-operand -> [not-op] level-4-expr
 andOperand: notOp? level4Expr;
 
 // R1015 or-operand -> [or-operand and-op] and-operand
-orOperand: (orOperand andOp)? andOperand;
+//LEFT RECURSION RESOLVED
+orOperand: andOperand | orOperand andOp andOperand;
 
 // R1016 equiv-operand -> [equiv-operand or-op] or-operand
-equivOperand: (equivOperand orOp)? orOperand;
+//LEFT RECURSION RESOLVED
+equivOperand: orOperand | equivOperand orOp orOperand;
 
 // R1017 level-5-expr -> [level-5-expr equiv-op] equiv-operand
-level5Expr: (level5Expr equivOp)? equivOperand;
+//LEFT RECURSION RESOLVED
+level5Expr:
+    equivOperand | level5Expr equivOp equivOperand;
 
 // R1018 not-op -> .NOT.
 notOp: '.NOT.';
@@ -1433,7 +1416,8 @@ orOp: '.OR.';
 equivOp: '.EQV.' | '.NEQV.';
 
 // R1022 expr -> [expr defined-binary-op] level-5-expr
-expr: (expr definedBinaryOp)? level5Expr;
+//LEFT RECURSION RESOLVED
+expr: level5Expr | expr definedBinaryOp level5Expr;
 
 // R1023 defined-binary-op -> . letter [letter]... .
 definedBinaryOp: '. letter' (letter)* '.';
@@ -1465,17 +1449,18 @@ intConstantExpr: intExpr;
 // R1032 assignment-stmt -> variable = expr
 assignmentStmt: variable '=' expr;
 
-// R1033 pointer-assignment-stmt -> data-pointer-object [( bounds-spec-list )] => data-target |
-// data-pointer-object ( bounds-remapping-list ) => data-target | proc-pointer-object => proc-target
-pointerAssignmentStmt:
-	dataPointerObject ('(' boundsSpecList ')')? '=>' dataTarget
-	| dataPointerObject '(' boundsRemappingList ')' '=>' dataTarget
-	| procPointerObject '=>' procTarget;
+// R1033 pointer-assignment-stmt ->
+//         data-pointer-object [( bounds-spec-list )] => data-target |
+//         data-pointer-object ( bounds-remapping-list ) => data-target |
+//         proc-pointer-object => proc-target
+pointerAssignmentStmt: dataPointerObject ('(' boundsSpecList ')')? '=>' dataTarget
+                  | dataPointerObject '(' boundsRemappingList ')' '=>' dataTarget
+                  | procPointerObject '=>' procTarget;
 
-// R1034 data-pointer-object -> variable-name | scalar-variable % data-pointer-component-name
-dataPointerObject:
-	variableName
-	| scalarVariable '%' dataPointerComponentName;
+// R1034 data-pointer-object ->
+//         variable-name | scalar-variable % data-pointer-component-name
+dataPointerObject: variableName
+                 | scalarVariable '%' dataPointerComponentName;
 
 // R1035 bounds-spec -> lower-bound-expr :
 boundsSpec: lowerBoundExpr ':';
@@ -1490,7 +1475,11 @@ dataTarget: expr;
 procPointerObject: procPointerName | procComponentRef;
 
 // R1039 proc-component-ref -> scalar-variable % procedure-component-name
-procComponentRef: scalarVariable '%' procedureComponentName;
+//LEFT RECURSION RESOLVED
+procComponentRef: designator '%' procedureComponentName 
+	|  procedureName '(' actualArgSpecList? ')' '%' procedureComponentName 
+	| procComponentRef '(' actualArgSpecList? ')' '%' procedureComponentName 
+	| dataRef '%' bindingName '(' actualArgSpecList? ')' '%' procedureComponentName;
 
 // R1040 proc-target -> expr | procedure-name | proc-component-ref
 procTarget: expr | procedureName | procComponentRef;
@@ -1498,21 +1487,18 @@ procTarget: expr | procedureName | procComponentRef;
 // R1041 where-stmt -> WHERE ( mask-expr ) where-assignment-stmt
 whereStmt: 'WHERE' '(' maskExpr ')' whereAssignmentStmt;
 
-// R1042 where-construct -> where-construct-stmt [where-body-construct]... [masked-elsewhere-stmt
-// [where-body-construct]...]... [elsewhere-stmt [where-body-construct]...] end-where-stmt
-whereConstruct:
-	whereConstructStmt (whereBodyConstruct)* (
-		maskedElsewhereStmt (whereBodyConstruct)*
-	)* (elsewhereStmt (whereBodyConstruct)*)* endWhereStmt;
+// R1042 where-construct ->
+//         where-construct-stmt [where-body-construct]...
+//         [masked-elsewhere-stmt [where-body-construct]...]...
+//         [elsewhere-stmt [where-body-construct]...] end-where-stmt
+whereConstruct: whereConstructStmt (whereBodyConstruct)* (maskedElsewhereStmt (whereBodyConstruct)*)* (elsewhereStmt (whereBodyConstruct)*)* endWhereStmt;
 
 // R1043 where-construct-stmt -> [where-construct-name :] WHERE ( mask-expr )
 whereConstructStmt: (whereConstructName ':')? 'WHERE' '(' maskExpr ')';
 
-// R1044 where-body-construct -> where-assignment-stmt | where-stmt | where-construct
-whereBodyConstruct:
-	whereAssignmentStmt
-	| whereStmt
-	| whereConstruct;
+// R1044 where-body-construct ->
+//         where-assignment-stmt | where-stmt | where-construct
+whereBodyConstruct: whereAssignmentStmt | whereStmt | whereConstruct;
 
 // R1045 where-assignment-stmt -> assignment-stmt
 whereAssignmentStmt: assignmentStmt;
@@ -1521,8 +1507,7 @@ whereAssignmentStmt: assignmentStmt;
 maskExpr: logicalExpr;
 
 // R1047 masked-elsewhere-stmt -> ELSEWHERE ( mask-expr ) [where-construct-name]
-maskedElsewhereStmt:
-	'ELSEWHERE' '(' maskExpr ')' whereConstructName?;
+maskedElsewhereStmt: 'ELSEWHERE' '(' maskExpr ')' whereConstructName?;
 
 // R1048 elsewhere-stmt -> ELSEWHERE [where-construct-name]
 elsewhereStmt: 'ELSEWHERE' whereConstructName?;
@@ -1530,21 +1515,18 @@ elsewhereStmt: 'ELSEWHERE' whereConstructName?;
 // R1049 end-where-stmt -> END WHERE [where-construct-name]
 endWhereStmt: 'END' 'WHERE' whereConstructName?;
 
-// R1050 forall-construct -> forall-construct-stmt [forall-body-construct]... end-forall-stmt
-forallConstruct:
-	forallConstructStmt forallBodyConstruct* endForallStmt;
+// R1050 forall-construct ->
+//         forall-construct-stmt [forall-body-construct]... end-forall-stmt
+forallConstruct: forallConstructStmt forallBodyConstruct* endForallStmt;
 
-// R1051 forall-construct-stmt -> [forall-construct-name :] FORALL concurrent-header
+// R1051 forall-construct-stmt ->
+//         [forall-construct-name :] FORALL concurrent-header
 forallConstructStmt: (forallConstructName ':')? 'FORALL' concurrentHeader;
 
-// R1052 forall-body-construct -> forall-assignment-stmt | where-stmt | where-construct |
-// forall-construct | forall-stmt
-forallBodyConstruct:
-	forallAssignmentStmt
-	| whereStmt
-	| whereConstruct
-	| forallConstruct
-	| forallStmt;
+// R1052 forall-body-construct ->
+//         forall-assignment-stmt | where-stmt | where-construct |
+//         forall-construct | forall-stmt
+forallBodyConstruct: forallAssignmentStmt | whereStmt | whereConstruct | forallConstruct | forallStmt;
 
 // R1053 forall-assignment-stmt -> assignment-stmt | pointer-assignment-stmt
 forallAssignmentStmt: assignmentStmt | pointerAssignmentStmt;
@@ -1555,15 +1537,17 @@ endForallStmt: 'END' 'FORALL' forallConstructName?;
 // R1055 forall-stmt -> FORALL concurrent-header forall-assignment-stmt
 forallStmt: 'FORALL' concurrentHeader forallAssignmentStmt;
 
+
 // R1101 block -> [execution-part-construct]...
 block: (executionPartConstruct)*;
 
 // R1102 associate-construct -> associate-stmt block end-associate-stmt
 associateConstruct: associateStmt block endAssociateStmt;
 
-// R1103 associate-stmt -> [associate-construct-name :] ASSOCIATE ( association-list )
+// R1103 associate-stmt ->
+        // [associate-construct-name :] ASSOCIATE ( association-list )
 associateStmt:
-	(associateConstructName ':')? 'ASSOCIATE' '(' associationList ')';
+    (associateConstructName ':')? 'ASSOCIATE' '(' associationList ')';
 
 // R1104 association -> associate-name => selector
 association: associateName '=>' selector;
@@ -1572,21 +1556,20 @@ association: associateName '=>' selector;
 selector: expr | variable;
 
 // R1106 end-associate-stmt -> END ASSOCIATE [associate-construct-name]
-endAssociateStmt: 'END' 'ASSOCIATE' associateConstructName?;
+endAssociateStmt:  'END' 'ASSOCIATE' associateConstructName?;
 
-// R1107 block-construct -> block-stmt [block-specification-part] block end-block-stmt
-blockConstruct:
-	blockStmt blockSpecificationPart? block endBlockStmt;
+// R1107 block-construct ->
+//         block-stmt [block-specification-part] block end-block-stmt
+blockConstruct: blockStmt blockSpecificationPart? block endBlockStmt;
 
 // R1108 block-stmt -> [block-construct-name :] BLOCK
 blockStmt: (blockConstructName ':')? 'BLOCK';
 
-// R1109 block-specification-part -> [use-stmt]... [import-stmt]... [[declaration-construct]...
-// specification-construct]
-blockSpecificationPart:
-	(useStmt)* (importStmt)* (
-		(declarationConstruct)* specificationConstruct
-	)?;
+// R1109 block-specification-part ->
+//         [use-stmt]... [import-stmt]...
+//         [[declaration-construct]... specification-construct]
+blockSpecificationPart: 
+    (useStmt)* (importStmt)* ((declarationConstruct)* specificationConstruct)?;
 
 // R1110 end-block-stmt -> END BLOCK [block-construct-name]
 endBlockStmt: 'END' 'BLOCK' blockConstructName?;
@@ -1594,18 +1577,18 @@ endBlockStmt: 'END' 'BLOCK' blockConstructName?;
 // R1111 change-team-construct -> change-team-stmt block end-change-team-stmt
 changeTeamConstruct: changeTeamStmt block endChangeTeamStmt;
 
-// R1112 change-team-stmt -> [team-construct-name :] CHANGE TEAM ( team-value [,
-// coarray-association-list] [, sync-stat-list] )
-changeTeamStmt: (teamConstructName ':')? 'CHANGE' 'TEAM' '(' teamValue (
-		',' coarrayAssociationList
-	)? (',' syncStatList)? ')';
+// R1112 change-team-stmt ->
+//         [team-construct-name :] CHANGE TEAM ( team-value
+//         [, coarray-association-list] [, sync-stat-list] )
+changeTeamStmt: (teamConstructName ':')? 'CHANGE' 'TEAM' '(' teamValue
+    (',' coarrayAssociationList)? (',' syncStatList)? ')';
 
 // R1113 coarray-association -> codimension-decl => selector
 coarrayAssociation: codimensionDecl '=>' selector;
 
-// R1114 end-change-team-stmt -> END TEAM [( [sync-stat-list] )] [team-construct-name]
-endChangeTeamStmt:
-	'END' 'TEAM' ('(' syncStatList? ')')? teamConstructName?;
+// R1114 end-change-team-stmt ->
+//         END TEAM [( [sync-stat-list] )] [team-construct-name]
+endChangeTeamStmt: 'END' 'TEAM' ('(' syncStatList? ')')? teamConstructName?;
 
 // R1115 team-value -> scalar-expr
 teamValue: scalarExpr;
@@ -1613,10 +1596,9 @@ teamValue: scalarExpr;
 // R1116 critical-construct -> critical-stmt block end-critical-stmt
 criticalConstruct: criticalStmt block endCriticalStmt;
 
-// R1117 critical-stmt -> [critical-construct-name :] CRITICAL [( [sync-stat-list] )]
-criticalStmt: (criticalConstructName ':')? 'CRITICAL' (
-		'(' syncStatList? ')'
-	)?;
+// R1117 critical-stmt ->
+//         [critical-construct-name :] CRITICAL [( [sync-stat-list] )]
+criticalStmt: (criticalConstructName ':')? 'CRITICAL' ('(' syncStatList? ')')?;
 
 // R1118 end-critical-stmt -> END CRITICAL [critical-construct-name]
 endCriticalStmt: 'END' 'CRITICAL' criticalConstructName?;
@@ -1633,30 +1615,27 @@ labelDoStmt: (doConstructName ':')? 'DO' label loopControl?;
 // R1122 nonlabel-do-stmt -> [do-construct-name :] DO [loop-control]
 nonlabelDoStmt: (doConstructName ':')? 'DO' loopControl?;
 
-// R1123 loop-control -> [,] do-variable = scalar-int-expr , scalar-int-expr [, scalar-int-expr] |
-// [,] WHILE ( scalar-logical-expr ) | [,] CONCURRENT concurrent-header concurrent-locality
+// R1123 loop-control ->
+//         [,] do-variable = scalar-int-expr , scalar-int-expr
+//           [, scalar-int-expr] |
+//         [,] WHILE ( scalar-logical-expr ) |
+//         [,] CONCURRENT concurrent-header concurrent-locality
 loopControl:
-	(',')? doVariable '=' scalarIntExpr ',' scalarIntExpr (
-		',' scalarIntExpr
-	)?
-	| (',')? 'WHILE' '(' scalarLogicalExpr ')'
-	| (',')? 'CONCURRENT' concurrentHeader concurrentLocality;
+    (',')? doVariable '=' scalarIntExpr ',' scalarIntExpr (',' scalarIntExpr)?
+    | (',')? 'WHILE' '(' scalarLogicalExpr ')'
+    | (',')? 'CONCURRENT' concurrentHeader concurrentLocality;
 
 // R1124 do-variable -> scalar-int-variable-name
 doVariable: scalarIntVariableName;
 
-// R1125 concurrent-header -> ( [integer-type-spec ::] concurrent-control-list [, scalar-mask-expr]
-// )
-concurrentHeader:
-	'(' (integerTypeSpec '::')? concurrentControlList (
-		',' scalarMaskExpr
-	)? ')';
+// R1125 concurrent-header ->
+//         ( [integer-type-spec ::] concurrent-control-list [, scalar-mask-expr] )
+concurrentHeader: 
+    '(' (integerTypeSpec '::')? concurrentControlList (',' scalarMaskExpr)? ')';
 
-// R1126 concurrent-control -> index-name = concurrent-limit : concurrent-limit [: concurrent-step]
-concurrentControl:
-	indexName '=' concurrentLimit ':' concurrentLimit (
-		':' concurrentStep
-	)?;
+// R1126 concurrent-control ->
+//         index-name = concurrent-limit : concurrent-limit [: concurrent-step]
+concurrentControl: indexName '=' concurrentLimit ':' concurrentLimit (':' concurrentStep)?;
 
 // R1127 concurrent-limit -> scalar-int-expr
 concurrentLimit: scalarIntExpr;
@@ -1667,13 +1646,14 @@ concurrentStep: scalarIntExpr;
 // R1129 concurrent-locality -> [locality-spec]...
 concurrentLocality: (localitySpec)*;
 
-// R1130 locality-spec -> LOCAL ( variable-name-list ) | LOCAL_INIT ( variable-name-list ) | SHARED
-// ( variable-name-list ) | DEFAULT ( NONE )
+// R1130 locality-spec ->
+//         LOCAL ( variable-name-list ) | LOCAL_INIT ( variable-name-list ) |
+//         SHARED ( variable-name-list ) | DEFAULT ( NONE )
 localitySpec:
-	'LOCAL' '(' variableNameList ')'
-	| 'LOCAL_INIT' '(' variableNameList ')'
-	| 'SHARED' '(' variableNameList ')'
-	| 'DEFAULT' '(' 'NONE' ')';
+    'LOCAL' '(' variableNameList ')' |
+    'LOCAL_INIT' '(' variableNameList ')' |
+    'SHARED' '(' variableNameList ')' |
+    'DEFAULT' '(' 'NONE' ')';
 
 // R1131 end-do -> end-do-stmt | continue-stmt
 endDo: endDoStmt | continueStmt;
@@ -1684,16 +1664,17 @@ endDoStmt: 'END' 'DO' doConstructName?;
 // R1133 cycle-stmt -> CYCLE [do-construct-name]
 cycleStmt: 'CYCLE' doConstructName?;
 
-// R1134 if-construct -> if-then-stmt block [else-if-stmt block]... [else-stmt block] end-if-stmt
+// R1134 if-construct ->
+//         if-then-stmt block [else-if-stmt block]... [else-stmt block]
+//         end-if-stmt
 ifConstruct:
-	ifThenStmt block (elseIfStmt block)* (elseStmt block)? endIfStmt;
+    ifThenStmt block (elseIfStmt block)* (elseStmt block)? endIfStmt;
 
 // R1135 if-then-stmt -> [if-construct-name :] IF ( scalar-logical-expr ) THEN
 ifThenStmt: (ifConstructName ':')? 'IF' '(' scalarLogicalExpr ')' 'THEN';
 
 // R1136 else-if-stmt -> ELSE IF ( scalar-logical-expr ) THEN [if-construct-name]
-elseIfStmt:
-	'ELSE' 'IF' '(' scalarLogicalExpr ')' 'THEN' ifConstructName?;
+elseIfStmt: 'ELSE' 'IF' '(' scalarLogicalExpr ')' 'THEN' ifConstructName?;
 
 // R1137 else-stmt -> ELSE [if-construct-name]
 elseStmt: 'ELSE' ifConstructName?;
@@ -1722,51 +1703,49 @@ caseExpr: scalarExpr;
 // R1145 case-selector -> ( case-value-range-list ) | DEFAULT
 caseSelector: '(' caseValueRangeList ')' | 'DEFAULT';
 
-// R1146 case-value-range -> case-value | case-value : | : case-value | case-value : case-value
-caseValueRange:
-	caseValue
-	| caseValue ':'
-	| ':' caseValue
-	| caseValue ':' caseValue;
+// R1146 case-value-range ->
+//         case-value | case-value : | : case-value | case-value : case-value
+caseValueRange: caseValue | caseValue ':' | ':' caseValue | caseValue ':' caseValue;
 
 // R1147 case-value -> scalar-constant-expr
 caseValue: scalarConstantExpr;
 
-// R1148 select-rank-construct -> select-rank-stmt [select-rank-case-stmt block]...
-// end-select-rank-stmt
-selectRankConstruct:
-	selectRankStmt (selectRankCaseStmt block)* endSelectRankStmt;
+// R1148 select-rank-construct ->
+//         select-rank-stmt [select-rank-case-stmt block]... end-select-rank-stmt
+selectRankConstruct: selectRankStmt (selectRankCaseStmt block)* endSelectRankStmt;
 
-// R1149 select-rank-stmt -> [select-construct-name :] SELECT RANK ( [associate-name =>] selector )
-selectRankStmt: (selectConstructName ':')? 'SELECT' 'RANK' '(' (
-		associateName '=>'
-	)? selector ')';
+// R1149 select-rank-stmt ->
+//         [select-construct-name :] SELECT RANK ( [associate-name =>] selector )
+selectRankStmt: (selectConstructName ':')? 'SELECT' 'RANK' '(' (associateName '=>')? selector ')';
 
-// R1150 select-rank-case-stmt -> RANK ( scalar-int-constant-expr ) [select-construct-name] | RANK (
-// * ) [select-construct-name] | RANK DEFAULT [select-construct-name]
+// R1150 select-rank-case-stmt ->
+//         RANK ( scalar-int-constant-expr ) [select-construct-name] |
+//         RANK ( * ) [select-construct-name] |
+//         RANK DEFAULT [select-construct-name]
 selectRankCaseStmt:
-	'RANK' '(' scalarIntConstantExpr ')' selectConstructName?
-	| 'RANK' '(' '*' ')' selectConstructName?
-	| 'RANK' 'DEFAULT' selectConstructName?;
+    'RANK' '(' scalarIntConstantExpr ')' selectConstructName? |
+    'RANK' '(' '*' ')' selectConstructName? |
+    'RANK' 'DEFAULT' selectConstructName?;
 
 // R1151 end-select-rank-stmt -> END SELECT [select-construct-name]
 endSelectRankStmt: 'END' 'SELECT' selectConstructName?;
 
-// R1152 select-type-construct -> select-type-stmt [type-guard-stmt block]... end-select-type-stmt
-selectTypeConstruct:
-	selectTypeStmt (typeGuardStmt block)* endSelectTypeStmt;
+// R1152 select-type-construct ->
+//         select-type-stmt [type-guard-stmt block]... end-select-type-stmt
+selectTypeConstruct: selectTypeStmt (typeGuardStmt block)* endSelectTypeStmt;
 
-// R1153 select-type-stmt -> [select-construct-name :] SELECT TYPE ( [associate-name =>] selector )
-selectTypeStmt: (selectConstructName ':')? 'SELECT' 'TYPE' '(' (
-		associateName '=>'
-	)? selector ')';
+// R1153 select-type-stmt ->
+//         [select-construct-name :] SELECT TYPE ( [associate-name =>] selector )
+selectTypeStmt: (selectConstructName ':')? 'SELECT' 'TYPE' '(' (associateName '=>')? selector ')';
 
-// R1154 type-guard-stmt -> TYPE IS ( type-spec ) [select-construct-name] | CLASS IS (
-// derived-type-spec ) [select-construct-name] | CLASS DEFAULT [select-construct-name]
+// R1154 type-guard-stmt ->
+//         TYPE IS ( type-spec ) [select-construct-name] |
+//         CLASS IS ( derived-type-spec ) [select-construct-name] |
+//         CLASS DEFAULT [select-construct-name]
 typeGuardStmt:
-	'TYPE' 'IS' '(' typeSpec ')' selectConstructName?
-	| 'CLASS' 'IS' '(' derivedTypeSpec ')' selectConstructName?
-	| 'CLASS' 'DEFAULT' selectConstructName?;
+    'TYPE' 'IS' '(' typeSpec ')' selectConstructName? |
+    'CLASS' 'IS' '(' derivedTypeSpec ')' selectConstructName? |
+    'CLASS' 'DEFAULT' selectConstructName?;
 
 // R1155 end-select-type-stmt -> END SELECT [select-construct-name]
 endSelectTypeStmt: 'END' 'SELECT' selectConstructName?;
@@ -1778,8 +1757,7 @@ exitStmt: 'EXIT' constructName?;
 gotoStmt: 'GO' 'TO' label;
 
 // R1158 computed-goto-stmt -> GO TO ( label-list ) [,] scalar-int-expr
-computedGotoStmt:
-	'GO' 'TO' '(' labelList ')' ','? scalarIntExpr;
+computedGotoStmt: 'GO' 'TO' '(' labelList ')' ','? scalarIntExpr;
 
 // R1159 continue-stmt -> CONTINUE
 continueStmt: 'CONTINUE';
@@ -1788,8 +1766,7 @@ continueStmt: 'CONTINUE';
 stopStmt: 'STOP' stopCode? (',' 'QUIET' '=' scalarLogicalExpr)?;
 
 // R1161 error-stop-stmt -> ERROR STOP [stop-code] [, QUIET = scalar-logical-expr]
-errorStopStmt:
-	'ERROR' 'STOP' stopCode? (',' 'QUIET' '=' scalarLogicalExpr)?;
+errorStopStmt: 'ERROR' 'STOP' stopCode? (',' 'QUIET' '=' scalarLogicalExpr)?;
 
 // R1162 stop-code -> scalar-default-char-expr | scalar-int-expr
 stopCode: scalarDefaultCharExpr | scalarIntExpr;
@@ -1804,8 +1781,7 @@ syncAllStmt: 'SYNC' 'ALL' ('(' syncStatList ')')?;
 syncStat: 'STAT' '=' statVariable | 'ERRMSG' '=' errmsgVariable;
 
 // R1166 sync-images-stmt -> SYNC IMAGES ( image-set [, sync-stat-list] )
-syncImagesStmt:
-	'SYNC' 'IMAGES' '(' imageSet (',' syncStatList)? ')';
+syncImagesStmt: 'SYNC' 'IMAGES' '(' imageSet (',' syncStatList)? ')';
 
 // R1167 image-set -> int-expr | *
 imageSet: intExpr | '*';
@@ -1814,19 +1790,16 @@ imageSet: intExpr | '*';
 syncMemoryStmt: 'SYNC' 'MEMORY' ('(' syncStatList? ')')?;
 
 // R1169 sync-team-stmt -> SYNC TEAM ( team-value [, sync-stat-list] )
-syncTeamStmt:
-	'SYNC' 'TEAM' '(' teamValue (',' syncStatList)? ')';
+syncTeamStmt: 'SYNC' 'TEAM' '(' teamValue (',' syncStatList)? ')';
 
 // R1170 event-post-stmt -> EVENT POST ( event-variable [, sync-stat-list] )
-eventPostStmt:
-	'EVENT' 'POST' '(' eventVariable (',' syncStatList)? ')';
+eventPostStmt: 'EVENT' 'POST' '(' eventVariable (',' syncStatList)? ')';
 
 // R1171 event-variable -> scalar-variable
 eventVariable: scalarVariable;
 
 // R1172 event-wait-stmt -> EVENT WAIT ( event-variable [, event-wait-spec-list] )
-eventWaitStmt:
-	'EVENT' 'WAIT' '(' eventVariable (',' eventWaitSpecList)? ')';
+eventWaitStmt: 'EVENT' 'WAIT' '(' eventVariable (',' eventWaitSpecList)? ')';
 
 // R1173 event-wait-spec -> until-spec | sync-stat
 eventWaitSpec: untilSpec | syncStat;
@@ -1834,17 +1807,16 @@ eventWaitSpec: untilSpec | syncStat;
 // R1174 until-spec -> UNTIL_COUNT = scalar-int-expr
 untilSpec: 'UNTIL_COUNT' '=' scalarIntExpr;
 
-// R1175 form-team-stmt -> FORM TEAM ( team-number , team-variable [, form-team-spec-list] )
+// R1175 form-team-stmt ->
+//         FORM TEAM ( team-number , team-variable [, form-team-spec-list] )
 formTeamStmt:
-	'FORM' 'TEAM' '(' teamNumber ',' teamVariable (
-		',' formTeamSpecList
-	)? ')';
+    'FORM' 'TEAM' '(' teamNumber ',' teamVariable (',' formTeamSpecList)? ')';
 
 // R1176 team-number -> scalar-int-expr
 teamNumber: scalarIntExpr;
 
 // R1177 team-variable -> scalar-variable
-teamVariable: scalarVariable;
+teamVariable:  scalarVariable;
 
 // R1178 form-team-spec -> NEW_INDEX = scalar-int-expr | sync-stat
 formTeamSpec: 'NEW_INDEX' '=' scalarIntExpr | syncStat;
@@ -1861,6 +1833,7 @@ unlockStmt: 'UNLOCK' '(' lockVariable (',' syncStatList)? ')';
 // R1182 lock-variable -> scalar-variable
 lockVariable: scalarVariable;
 
+
 // R1201 io-unit -> file-unit-number | * | internal-file-variable
 ioUnit: fileUnitNumber | '*' | internalFileVariable;
 
@@ -1873,35 +1846,40 @@ internalFileVariable: charVariable;
 // R1204 open-stmt -> OPEN ( connect-spec-list )
 openStmt: 'OPEN' '(' connectSpecList ')';
 
-// R1205 connect-spec -> [UNIT =] file-unit-number | ACCESS = scalar-default-char-expr | ACTION =
-// scalar-default-char-expr | ASYNCHRONOUS = scalar-default-char-expr | BLANK =
-// scalar-default-char-expr | DECIMAL = scalar-default-char-expr | DELIM = scalar-default-char-expr
-// | ENCODING = scalar-default-char-expr | ERR = label | FILE = file-name-expr | FORM =
-// scalar-default-char-expr | IOMSG = iomsg-variable | IOSTAT = scalar-int-variable | NEWUNIT =
-// scalar-int-variable | PAD = scalar-default-char-expr | POSITION = scalar-default-char-expr | RECL
-// = scalar-int-expr | ROUND = scalar-default-char-expr | SIGN = scalar-default-char-expr | STATUS =
-// scalar-default-char-expr
+// R1205 connect-spec ->
+//         [UNIT =] file-unit-number | ACCESS = scalar-default-char-expr |
+//         ACTION = scalar-default-char-expr |
+//         ASYNCHRONOUS = scalar-default-char-expr |
+//         BLANK = scalar-default-char-expr |
+//         DECIMAL = scalar-default-char-expr | DELIM = scalar-default-char-expr |
+//         ENCODING = scalar-default-char-expr | ERR = label |
+//         FILE = file-name-expr | FORM = scalar-default-char-expr |
+//         IOMSG = iomsg-variable | IOSTAT = scalar-int-variable |
+//         NEWUNIT = scalar-int-variable | PAD = scalar-default-char-expr |
+//         POSITION = scalar-default-char-expr | RECL = scalar-int-expr |
+//         ROUND = scalar-default-char-expr | SIGN = scalar-default-char-expr |
+//         STATUS = scalar-default-char-expr
 connectSpec:
-	('UNIT' '=')? fileUnitNumber
-	| 'ACCESS' '=' scalarDefaultCharExpr
-	| 'ACTION' '=' scalarDefaultCharExpr
-	| 'ASYNCHRONOUS' '=' scalarDefaultCharExpr
-	| 'BLANK' '=' scalarDefaultCharExpr
-	| 'DECIMAL' '=' scalarDefaultCharExpr
-	| 'DELIM' '=' scalarDefaultCharExpr
-	| 'ENCODING' '=' scalarDefaultCharExpr
-	| 'ERR' '=' label
-	| 'FILE' '=' fileNameExpr
-	| 'FORM' '=' scalarDefaultCharExpr
-	| 'IOMSG' '=' iomsgVariable
-	| 'IOSTAT' '=' scalarIntVariable
-	| 'NEWUNIT' '=' scalarIntVariable
-	| 'PAD' '=' scalarDefaultCharExpr
-	| 'POSITION' '=' scalarDefaultCharExpr
-	| 'RECL' '=' scalarIntExpr
-	| 'ROUND' '=' scalarDefaultCharExpr
-	| 'SIGN' '=' scalarDefaultCharExpr
-	| 'STATUS' '=' scalarDefaultCharExpr;
+    ('UNIT' '=')? fileUnitNumber |
+    'ACCESS' '=' scalarDefaultCharExpr |
+    'ACTION' '=' scalarDefaultCharExpr |
+    'ASYNCHRONOUS' '=' scalarDefaultCharExpr |
+    'BLANK' '=' scalarDefaultCharExpr |
+    'DECIMAL' '=' scalarDefaultCharExpr |
+    'DELIM' '=' scalarDefaultCharExpr |
+    'ENCODING' '=' scalarDefaultCharExpr |
+    'ERR' '=' label |
+    'FILE' '=' fileNameExpr |
+    'FORM' '=' scalarDefaultCharExpr |
+    'IOMSG' '=' iomsgVariable |
+    'IOSTAT' '=' scalarIntVariable |
+    'NEWUNIT' '=' scalarIntVariable |
+    'PAD' '=' scalarDefaultCharExpr |
+    'POSITION' '=' scalarDefaultCharExpr |
+    'RECL' '=' scalarIntExpr |
+    'ROUND' '=' scalarDefaultCharExpr |
+    'SIGN' '=' scalarDefaultCharExpr |
+    'STATUS' '=' scalarDefaultCharExpr;
 
 // R1206 file-name-expr -> scalar-default-char-expr
 fileNameExpr: scalarDefaultCharExpr;
@@ -1912,20 +1890,23 @@ iomsgVariable: scalarDefaultCharVariable;
 // R1208 close-stmt -> CLOSE ( close-spec-list )
 closeStmt: 'CLOSE' '(' closeSpecList ')';
 
-// R1209 close-spec -> [UNIT =] file-unit-number | IOSTAT = scalar-int-variable | IOMSG =
-// iomsg-variable | ERR = label | STATUS = scalar-default-char-expr
+// R1209 close-spec ->
+//         [UNIT =] file-unit-number | IOSTAT = scalar-int-variable |
+//         IOMSG = iomsg-variable | ERR = label |
+//         STATUS = scalar-default-char-expr
 closeSpec:
-	('UNIT' '=')? fileUnitNumber
-	| 'IOSTAT' '=' scalarIntVariable
-	| 'IOMSG' '=' iomsgVariable
-	| 'ERR' '=' label
-	| 'STATUS' '=' scalarDefaultCharExpr;
+    ('UNIT' '=')? fileUnitNumber |
+    'IOSTAT' '=' scalarIntVariable |
+    'IOMSG' '=' iomsgVariable |
+    'ERR' '=' label |
+    'STATUS' '=' scalarDefaultCharExpr;
 
-// R1210 read-stmt -> READ ( io-control-spec-list ) [input-item-list] | READ format [,
-// input-item-list]
+// R1210 read-stmt ->
+//         READ ( io-control-spec-list ) [input-item-list] |
+//         READ format [, input-item-list]
 readStmt:
-	'READ' '(' ioControlSpecList ')' (inputItemList)?
-	| 'READ' format (',' inputItemList)?;
+    'READ' '(' ioControlSpecList ')' (inputItemList)? |
+    'READ' format (',' inputItemList)?;
 
 // R1211 write-stmt -> WRITE ( io-control-spec-list ) [output-item-list]
 writeStmt: 'WRITE' '(' ioControlSpecList ')' (outputItemList)?;
@@ -1933,34 +1914,38 @@ writeStmt: 'WRITE' '(' ioControlSpecList ')' (outputItemList)?;
 // R1212 print-stmt -> PRINT format [, output-item-list]
 printStmt: 'PRINT' format (',' outputItemList)?;
 
-// R1213 io-control-spec -> [UNIT =] io-unit | [FMT =] format | [NML =] namelist-group-name |
-// ADVANCE = scalar-default-char-expr | ASYNCHRONOUS = scalar-default-char-constant-expr | BLANK =
-// scalar-default-char-expr | DECIMAL = scalar-default-char-expr | DELIM = scalar-default-char-expr
-// | END = label | EOR = label | ERR = label | ID = id-variable | IOMSG = iomsg-variable | IOSTAT =
-// scalar-int-variable | PAD = scalar-default-char-expr | POS = scalar-int-expr | REC =
-// scalar-int-expr | ROUND = scalar-default-char-expr | SIGN = scalar-default-char-expr | SIZE =
-// scalar-int-variable
+// R1213 io-control-spec ->
+//         [UNIT =] io-unit | [FMT =] format | [NML =] namelist-group-name |
+//         ADVANCE = scalar-default-char-expr |
+//         ASYNCHRONOUS = scalar-default-char-constant-expr |
+//         BLANK = scalar-default-char-expr | DECIMAL = scalar-default-char-expr |
+//         DELIM = scalar-default-char-expr | END = label | EOR = label |
+//         ERR = label | ID = id-variable | IOMSG = iomsg-variable |
+//         IOSTAT = scalar-int-variable | PAD = scalar-default-char-expr |
+//         POS = scalar-int-expr | REC = scalar-int-expr |
+//         ROUND = scalar-default-char-expr | SIGN = scalar-default-char-expr |
+//         SIZE = scalar-int-variable
 ioControlSpec:
-	('UNIT' '=')? ioUnit
-	| ('FMT' '=')? format
-	| ('NML' '=')? namelistGroupName
-	| 'ADVANCE' '=' scalarDefaultCharExpr
-	| 'ASYNCHRONOUS' '=' scalarDefaultCharConstantExpr
-	| 'BLANK' '=' scalarDefaultCharExpr
-	| 'DECIMAL' '=' scalarDefaultCharExpr
-	| 'DELIM' '=' scalarDefaultCharExpr
-	| 'END' '=' label
-	| 'EOR' '=' label
-	| 'ERR' '=' label
-	| 'ID' '=' idVariable
-	| 'IOMSG' '=' iomsgVariable
-	| 'IOSTAT' '=' scalarIntVariable
-	| 'PAD' '=' scalarDefaultCharExpr
-	| 'POS' '=' scalarIntExpr
-	| 'REC' '=' scalarIntExpr
-	| 'ROUND' '=' scalarDefaultCharExpr
-	| 'SIGN' '=' scalarDefaultCharExpr
-	| 'SIZE' '=' scalarIntVariable;
+    ('UNIT' '=')? ioUnit |
+    ('FMT' '=')? format |
+    ('NML' '=')? namelistGroupName |
+    'ADVANCE' '=' scalarDefaultCharExpr |
+    'ASYNCHRONOUS' '=' scalarDefaultCharConstantExpr |
+    'BLANK' '=' scalarDefaultCharExpr |
+    'DECIMAL' '=' scalarDefaultCharExpr |
+    'DELIM' '=' scalarDefaultCharExpr |
+    'END' '=' label |
+    'EOR' '=' label |
+    'ERR' '=' label |
+    'ID' '=' idVariable |
+    'IOMSG' '=' iomsgVariable |
+    'IOSTAT' '=' scalarIntVariable |
+    'PAD' '=' scalarDefaultCharExpr |
+    'POS' '=' scalarIntExpr |
+    'REC' '=' scalarIntExpr |
+    'ROUND' '=' scalarDefaultCharExpr |
+    'SIGN' '=' scalarDefaultCharExpr |
+    'SIZE' '=' scalarIntVariable;
 
 // R1214 id-variable -> scalar-int-variable
 idVariable: scalarIntVariable;
@@ -1975,150 +1960,153 @@ inputItem: variable | ioImpliedDo;
 outputItem: expr | ioImpliedDo;
 
 // R1218 io-implied-do -> ( io-implied-do-object-list , io-implied-do-control )
-ioImpliedDo:
-	'(' ioImpliedDoObjectList ',' ioImpliedDoControl ')';
+ioImpliedDo: '(' ioImpliedDoObjectList ',' ioImpliedDoControl ')';
 
 // R1219 io-implied-do-object -> input-item | output-item
 ioImpliedDoObject: inputItem | outputItem;
 
-// R1220 io-implied-do-control -> do-variable = scalar-int-expr , scalar-int-expr [,
-// scalar-int-expr]
-ioImpliedDoControl:
-	doVariable '=' scalarIntExpr ',' scalarIntExpr (
-		',' scalarIntExpr
-	)?;
+// R1220 io-implied-do-control ->
+//         do-variable = scalar-int-expr , scalar-int-expr [, scalar-int-expr]
+ioImpliedDoControl: doVariable '=' scalarIntExpr ',' scalarIntExpr (',' scalarIntExpr)?;
 
 // R1221 dtv-type-spec -> TYPE ( derived-type-spec ) | CLASS ( derived-type-spec )
-dtvTypeSpec:
-	'TYPE' '(' derivedTypeSpec ')'
-	| 'CLASS' '(' derivedTypeSpec ')';
+dtvTypeSpec: 'TYPE' '(' derivedTypeSpec ')' | 'CLASS' '(' derivedTypeSpec ')';
 
 // R1222 wait-stmt -> WAIT ( wait-spec-list )
 waitStmt: 'WAIT' '(' waitSpecList ')';
 
-// R1223 wait-spec -> [UNIT =] file-unit-number | END = label | EOR = label | ERR = label | ID =
-// scalar-int-expr | IOMSG = iomsg-variable | IOSTAT = scalar-int-variable
+// R1223 wait-spec ->
+//         [UNIT =] file-unit-number | END = label | EOR = label | ERR = label |
+//         ID = scalar-int-expr | IOMSG = iomsg-variable |
+//         IOSTAT = scalar-int-variable
 waitSpec:
-	('UNIT' '=')? fileUnitNumber
-	| 'END' '=' label
-	| 'EOR' '=' label
-	| 'ERR' '=' label
-	| 'ID' '=' scalarIntExpr
-	| 'IOMSG' '=' iomsgVariable
-	| 'IOSTAT' '=' scalarIntVariable;
+    ('UNIT' '=')? fileUnitNumber |
+    'END' '=' label |
+    'EOR' '=' label |
+    'ERR' '=' label |
+    'ID' '=' scalarIntExpr |
+    'IOMSG' '=' iomsgVariable |
+    'IOSTAT' '=' scalarIntVariable;
 
-// R1224 backspace-stmt -> BACKSPACE file-unit-number | BACKSPACE ( position-spec-list )
-backspaceStmt:
-	'BACKSPACE' fileUnitNumber
-	| 'BACKSPACE' '(' positionSpecList ')';
+// R1224 backspace-stmt ->
+//         BACKSPACE file-unit-number | BACKSPACE ( position-spec-list )
+backspaceStmt: 'BACKSPACE' fileUnitNumber | 'BACKSPACE' '(' positionSpecList ')';
 
 // R1225 endfile-stmt -> ENDFILE file-unit-number | ENDFILE ( position-spec-list )
-endfileStmt:
-	'ENDFILE' fileUnitNumber
-	| 'ENDFILE' '(' positionSpecList ')';
+endfileStmt: 'ENDFILE' fileUnitNumber | 'ENDFILE' '(' positionSpecList ')';
 
 // R1226 rewind-stmt -> REWIND file-unit-number | REWIND ( position-spec-list )
-rewindStmt:
-	'REWIND' fileUnitNumber
-	| 'REWIND' '(' positionSpecList ')';
+rewindStmt: 'REWIND' fileUnitNumber | 'REWIND' '(' positionSpecList ')';
 
-// R1227 position-spec -> [UNIT =] file-unit-number | IOMSG = iomsg-variable | IOSTAT =
-// scalar-int-variable | ERR = label
+// R1227 position-spec ->
+//         [UNIT =] file-unit-number | IOMSG = iomsg-variable |
+//         IOSTAT = scalar-int-variable | ERR = label
 positionSpec:
-	('UNIT' '=')? fileUnitNumber
-	| 'IOMSG' '=' iomsgVariable
-	| 'IOSTAT' '=' scalarIntVariable
-	| 'ERR' '=' label;
+    ('UNIT' '=')? fileUnitNumber |
+    'IOMSG' '=' iomsgVariable |
+    'IOSTAT' '=' scalarIntVariable |
+    'ERR' '=' label;
 
 // R1228 flush-stmt -> FLUSH file-unit-number | FLUSH ( flush-spec-list )
 flushStmt:
-	'FLUSH' fileUnitNumber
-	| 'FLUSH' '(' flushSpecList ')';
+    'FLUSH' fileUnitNumber |
+    'FLUSH' '(' flushSpecList ')';
 
-// R1229 flush-spec -> [UNIT =] file-unit-number | IOSTAT = scalar-int-variable | IOMSG =
-// iomsg-variable | ERR = label
+// R1229 flush-spec ->
+//         [UNIT =] file-unit-number | IOSTAT = scalar-int-variable |
+//         IOMSG = iomsg-variable | ERR = label
 flushSpec:
-	('UNIT' '=')? fileUnitNumber
-	| 'IOSTAT' '=' scalarIntVariable
-	| 'IOMSG' '=' iomsgVariable
-	| 'ERR' '=' label;
+    ('UNIT' '=')? fileUnitNumber |
+    'IOSTAT' '=' scalarIntVariable |
+    'IOMSG' '=' iomsgVariable |
+    'ERR' '=' label;
 
-// R1230 inquire-stmt -> INQUIRE ( inquire-spec-list ) | INQUIRE ( IOLENGTH = scalar-int-variable )
-// output-item-list
+// R1230 inquire-stmt ->
+//         INQUIRE ( inquire-spec-list ) |
+//         INQUIRE ( IOLENGTH = scalar-int-variable ) output-item-list
 inquireStmt:
-	'INQUIRE' '(' inquireSpecList ')'
-	| 'INQUIRE' '(' 'IOLENGTH' '=' scalarIntVariable ')' outputItemList;
+    'INQUIRE' '(' inquireSpecList ')' |
+    'INQUIRE' '(' 'IOLENGTH' '=' scalarIntVariable ')' outputItemList;
 
-// R1231 inquire-spec -> [UNIT =] file-unit-number | FILE = file-name-expr | ACCESS =
-// scalar-default-char-variable | ACTION = scalar-default-char-variable | ASYNCHRONOUS =
-// scalar-default-char-variable | BLANK = scalar-default-char-variable | DECIMAL =
-// scalar-default-char-variable | DELIM = scalar-default-char-variable | ENCODING =
-// scalar-default-char-variable | ERR = label | EXIST = scalar-logical-variable | FORM =
-// scalar-default-char-variable | FORMATTED = scalar-default-char-variable | ID = scalar-int-expr |
-// IOMSG = iomsg-variable | IOSTAT = scalar-int-variable | NAME = scalar-default-char-variable |
-// NAMED = scalar-logical-variable | NEXTREC = scalar-int-variable | NUMBER = scalar-int-variable |
-// OPENED = scalar-logical-variable | PAD = scalar-default-char-variable | PENDING =
-// scalar-logical-variable | POS = scalar-int-variable | POSITION = scalar-default-char-variable |
-// READ = scalar-default-char-variable | READWRITE = scalar-default-char-variable | RECL =
-// scalar-int-variable | ROUND = scalar-default-char-variable | SEQUENTIAL =
-// scalar-default-char-variable | SIGN = scalar-default-char-variable | SIZE = scalar-int-variable |
-// STREAM = scalar-default-char-variable | STATUS = scalar-default-char-variable | WRITE =
-// scalar-default-char-variable
+// R1231 inquire-spec ->
+//         [UNIT =] file-unit-number | FILE = file-name-expr |
+//         ACCESS = scalar-default-char-variable |
+//         ACTION = scalar-default-char-variable |
+//         ASYNCHRONOUS = scalar-default-char-variable |
+//         BLANK = scalar-default-char-variable |
+//         DECIMAL = scalar-default-char-variable |
+//         DELIM = scalar-default-char-variable |
+//         ENCODING = scalar-default-char-variable |
+//         ERR = label | EXIST = scalar-logical-variable |
+//         FORM = scalar-default-char-variable |
+//         FORMATTED = scalar-default-char-variable | ID = scalar-int-expr |
+//         IOMSG = iomsg-variable | IOSTAT = scalar-int-variable |
+//         NAME = scalar-default-char-variable |
+//         NAMED = scalar-logical-variable | NEXTREC = scalar-int-variable |
+//         NUMBER = scalar-int-variable | OPENED = scalar-logical-variable |
+//         PAD = scalar-default-char-variable |
+//         PENDING = scalar-logical-variable | POS = scalar-int-variable |
+//         POSITION = scalar-default-char-variable |
+//         READ = scalar-default-char-variable |
+//         READWRITE = scalar-default-char-variable |
+//         RECL = scalar-int-variable | ROUND = scalar-default-char-variable |
+//         SEQUENTIAL = scalar-default-char-variable |
+//         SIGN = scalar-default-char-variable | SIZE = scalar-int-variable |
+//         STREAM = scalar-default-char-variable |
+//         STATUS = scalar-default-char-variable |
+//         WRITE = scalar-default-char-variable
 inquireSpec:
-	('UNIT' '=')? fileUnitNumber
-	| 'FILE' '=' fileNameExpr
-	| 'ACCESS' '=' scalarDefaultCharVariable
-	| 'ACTION' '=' scalarDefaultCharVariable
-	| 'ASYNCHRONOUS' '=' scalarDefaultCharVariable
-	| 'BLANK' '=' scalarDefaultCharVariable
-	| 'DECIMAL' '=' scalarDefaultCharVariable
-	| 'DELIM' '=' scalarDefaultCharVariable
-	| 'ENCODING' '=' scalarDefaultCharVariable
-	| 'ERR' '=' label
-	| 'EXIST' '=' scalarLogicalVariable
-	| 'FORM' '=' scalarDefaultCharVariable
-	| 'FORMATTED' '=' scalarDefaultCharVariable
-	| 'ID' '=' scalarIntExpr
-	| 'IOMSG' '=' iomsgVariable
-	| 'IOSTAT' '=' scalarIntVariable
-	| 'NAME' '=' scalarDefaultCharVariable
-	| 'NAMED' '=' scalarLogicalVariable
-	| 'NEXTREC' '=' scalarIntVariable
-	| 'NUMBER' '=' scalarIntVariable
-	| 'OPENED' '=' scalarLogicalVariable
-	| 'PAD' '=' scalarDefaultCharVariable
-	| 'PENDING' '=' scalarLogicalVariable
-	| 'POS' '=' scalarIntVariable
-	| 'POSITION' '=' scalarDefaultCharVariable
-	| 'READ' '=' scalarDefaultCharVariable
-	| 'READWRITE' '=' scalarDefaultCharVariable
-	| 'RECL' '=' scalarIntVariable
-	| 'ROUND' '=' scalarDefaultCharVariable
-	| 'SEQUENTIAL' '=' scalarDefaultCharVariable
-	| 'SIGN' '=' scalarDefaultCharVariable
-	| 'SIZE' '=' scalarIntVariable
-	| 'STREAM' '=' scalarDefaultCharVariable
-	| 'STATUS' '=' scalarDefaultCharVariable
-	| 'WRITE' '=' scalarDefaultCharVariable;
+    ('UNIT' '=')? fileUnitNumber |
+    'FILE' '=' fileNameExpr |
+    'ACCESS' '=' scalarDefaultCharVariable |
+    'ACTION' '=' scalarDefaultCharVariable |
+    'ASYNCHRONOUS' '=' scalarDefaultCharVariable |
+    'BLANK' '=' scalarDefaultCharVariable |
+    'DECIMAL' '=' scalarDefaultCharVariable |
+    'DELIM' '=' scalarDefaultCharVariable |
+    'ENCODING' '=' scalarDefaultCharVariable |
+    'ERR' '=' label |
+    'EXIST' '=' scalarLogicalVariable |
+    'FORM' '=' scalarDefaultCharVariable |
+    'FORMATTED' '=' scalarDefaultCharVariable |
+    'ID' '=' scalarIntExpr |
+    'IOMSG' '=' iomsgVariable |
+    'IOSTAT' '=' scalarIntVariable |
+    'NAME' '=' scalarDefaultCharVariable |
+    'NAMED' '=' scalarLogicalVariable |
+    'NEXTREC' '=' scalarIntVariable |
+    'NUMBER' '=' scalarIntVariable |
+    'OPENED' '=' scalarLogicalVariable |
+    'PAD' '=' scalarDefaultCharVariable |
+    'PENDING' '=' scalarLogicalVariable |
+    'POS' '=' scalarIntVariable |
+    'POSITION' '=' scalarDefaultCharVariable |
+    'READ' '=' scalarDefaultCharVariable |
+    'READWRITE' '=' scalarDefaultCharVariable |
+    'RECL' '=' scalarIntVariable |
+    'ROUND' '=' scalarDefaultCharVariable |
+    'SEQUENTIAL' '=' scalarDefaultCharVariable |
+    'SIGN' '=' scalarDefaultCharVariable |
+    'SIZE' '=' scalarIntVariable |
+    'STREAM' '=' scalarDefaultCharVariable |
+    'STATUS' '=' scalarDefaultCharVariable |
+    'WRITE' '=' scalarDefaultCharVariable;
+
 
 // R1301 format-stmt -> FORMAT format-specification
 formatStmt: 'FORMAT' formatSpecification;
 
-// R1302 format-specification -> ( [format-items] ) | ( [format-items ,] unlimited-format-item )
+// R1302 format-specification ->
+//         ( [format-items] ) | ( [format-items ,] unlimited-format-item )
 formatSpecification:
-	'(' formatItems? ')'
-	| '(' (formatItems ',')? unlimitedFormatItem ')';
+    '(' formatItems? ')' |  '(' (formatItems ',')? unlimitedFormatItem  ')';
 
 // R1303 format-items -> format-item [[,] format-item]...
 formatItems: formatItem (','? formatItem)*;
 
-// R1304 format-item -> [r] data-edit-desc | control-edit-desc | char-string-edit-desc | [r] (
-// format-items )
-formatItem:
-	'r'? dataEditDesc
-	| controlEditDesc
-	| charStringEditDesc
-	| 'r'? '(' formatItems ')';
+// R1304 format-item ->
+//         [r] data-edit-desc | control-edit-desc | char-string-edit-desc | [r] ( format-items )
+formatItem: 'r'? dataEditDesc | controlEditDesc | charStringEditDesc | 'r'? '(' formatItems ')';
 
 // R1305 unlimited-format-item -> * ( format-items )
 unlimitedFormatItem: '*' '(' formatItems ')';
@@ -2126,24 +2114,26 @@ unlimitedFormatItem: '*' '(' formatItems ')';
 // R1306 r -> digit-string
 r: digitString;
 
-// R1307 data-edit-desc -> I w [. m] | B w [. m] | O w [. m] | Z w [. m] | F w . d | E w . d [E e] |
-// EN w . d [E e] | ES w . d [E e] | EX w . d [E e] | G w [. d [E e]] | L w | A [w] | D w . d | DT
-// [char-literal-constant] [( v-list )]
+// R1307 data-edit-desc ->
+//         I w [. m] | B w [. m] | O w [. m] | Z w [. m] | F w . d |
+//         E w . d [E e] | EN w . d [E e] | ES w . d [E e] | EX w . d [E e] |
+//         G w [. d [E e]] | L w | A [w] | D w . d |
+//         DT [char-literal-constant] [( v-list )]
 dataEditDesc:
-	'I' w ('.' m)?
-	| 'B' w ('.' m)?
-	| 'O' w ('.' m)?
-	| 'Z' w ('.' m)?
-	| 'F' w '.' d
-	| 'E' w '.' d ( 'E' e)?
-	| 'EN' w '.' d ( 'E' e)?
-	| 'ES' w '.' d ( 'E' e)?
-	| 'EX' w '.' d ( 'E' e)?
-	| 'G' w ('.' d ( 'E' e)?)?
-	| 'L' w
-	| 'A' w?
-	| 'D' w '.' d
-	| 'DT' charLiteralConstant? ( '(' vList ')')?;
+    'I' w ('.' m)? |
+    'B' w ('.' m)? |
+    'O' w ('.' m)? |
+    'Z' w ('.' m)? |
+    'F' w '.' d |
+    'E' w '.' d ( 'E' e )? |
+    'EN' w '.' d ( 'E' e )? |
+    'ES' w '.' d ( 'E' e )? |
+    'EX' w '.' d ( 'E' e )? |
+    'G' w ('.' d ( 'E' e )?)? |
+    'L' w |
+    'A' w? |
+    'D' w '.' d |
+    'DT' charLiteralConstant? ( '(' vList ')' )?;
 
 // R1308 w -> digit-string
 w: digitString;
@@ -2160,23 +2150,28 @@ e: digitString;
 // R1312 v -> [sign] digit-string
 v: sign? digitString;
 
-// R1313 control-edit-desc -> position-edit-desc | [r] / | : | sign-edit-desc | k P |
-// blank-interp-edit-desc | round-edit-desc | decimal-edit-desc
+// R1313 control-edit-desc ->
+//         position-edit-desc | [r] / | : | sign-edit-desc | k P |
+//         blank-interp-edit-desc | round-edit-desc | decimal-edit-desc 
 controlEditDesc:
-	positionEditDesc
-	| 'r'? '/'
-	| ':'
-	| signEditDesc
-	| 'k' 'P'
-	| blankInterpEditDesc
-	| roundEditDesc
-	| decimalEditDesc;
+    positionEditDesc |
+    'r'? '/' |
+    ':' |
+    signEditDesc |
+    'k' 'P' |
+    blankInterpEditDesc |
+    roundEditDesc |
+    decimalEditDesc;
 
 // R1314 k -> [sign] digit-string
 k: sign? digitString;
 
 // R1315 position-edit-desc -> T n | TL n | TR n | n X
-positionEditDesc: 'T' n | 'TL' n | 'TR' n | n 'X';
+positionEditDesc:
+    'T' n |
+    'TL' n |
+    'TR' n |
+    n 'X';
 
 // R1316 n -> digit-string
 n: digitString;
@@ -2196,10 +2191,12 @@ decimalEditDesc: 'DC' | 'DP';
 // R1321 char-string-edit-desc -> char-literal-constant
 charStringEditDesc: charLiteralConstant;
 
-// R1401 main-program -> [program-stmt] [specification-part] [execution-part]
-// [internal-subprogram-part] end-program-stmt
+
+// R1401 main-program ->
+//         [program-stmt] [specification-part] [execution-part]
+//         [internal-subprogram-part] end-program-stmt
 mainProgram:
-	programStmt? specificationPart? executionPart? internalSubprogramPart? endProgramStmt;
+    programStmt? specificationPart? executionPart? internalSubprogramPart? endProgramStmt;
 
 // R1402 program-stmt -> PROGRAM program-name
 programStmt: 'PROGRAM' programName;
@@ -2207,9 +2204,11 @@ programStmt: 'PROGRAM' programName;
 // R1403 end-program-stmt -> END [PROGRAM [program-name]]
 endProgramStmt: 'END' ('PROGRAM' programName?)?;
 
-// R1404 module -> module-stmt [specification-part] [module-subprogram-part] end-module-stmt
+// R1404 module ->
+//         module-stmt [specification-part] [module-subprogram-part]
+//         end-module-stmt
 module:
-	moduleStmt specificationPart? moduleSubprogramPart? endModuleStmt;
+    moduleStmt specificationPart? moduleSubprogramPart? endModuleStmt;
 
 // R1405 module-stmt -> MODULE module-name
 moduleStmt: 'MODULE' moduleName;
@@ -2220,27 +2219,27 @@ endModuleStmt: 'END' ('MODULE' moduleName?)?;
 // R1407 module-subprogram-part -> contains-stmt [module-subprogram]...
 moduleSubprogramPart: containsStmt moduleSubprogram*;
 
-// R1408 module-subprogram -> function-subprogram | subroutine-subprogram |
-// separate-module-subprogram
-moduleSubprogram:
-	functionSubprogram
-	| subroutineSubprogram
-	| separateModuleSubprogram;
+// R1408 module-subprogram ->
+//         function-subprogram | subroutine-subprogram |
+//         separate-module-subprogram
+moduleSubprogram: functionSubprogram | subroutineSubprogram | separateModuleSubprogram;
 
-// R1409 use-stmt -> USE [[, module-nature] ::] module-name [, rename-list] | USE [[, module-nature]
-// ::] module-name , ONLY : [only-list]
+// R1409 use-stmt ->
+//         USE [[, module-nature] ::] module-name [, rename-list] |
+//         USE [[, module-nature] ::] module-name , ONLY : [only-list]
 useStmt:
-	'USE' ((',' moduleNature)? '::')? moduleName (',' renameList)?
-	| 'USE' ((',' moduleNature)? '::')? moduleName ',' 'ONLY' ':' onlyList?;
+    'USE' ((',' moduleNature)? '::')? moduleName (',' renameList)? |
+    'USE' ((',' moduleNature)? '::')? moduleName ',' 'ONLY' ':' onlyList?;
 
 // R1410 module-nature -> INTRINSIC | NON_INTRINSIC
 moduleNature: 'INTRINSIC' | 'NON_INTRINSIC';
 
-// R1411 rename -> local-name => use-name | OPERATOR ( local-defined-operator ) => OPERATOR (
-// use-defined-operator )
-rename:
-	localName '=>' useName
-	| 'OPERATOR' '(' localDefinedOperator ')' '=>' 'OPERATOR' '(' useDefinedOperator ')';
+// R1411 rename ->
+//         local-name => use-name |
+//         OPERATOR ( local-defined-operator ) =>
+//           OPERATOR ( use-defined-operator )
+rename: localName '=>' useName |
+    'OPERATOR' '(' localDefinedOperator ')' '=>' 'OPERATOR' '(' useDefinedOperator ')';
 
 // R1412 only -> generic-spec | only-use-name | rename
 only: genericSpec | onlyUseName | rename;
@@ -2254,14 +2253,14 @@ localDefinedOperator: definedUnaryOp | definedBinaryOp;
 // R1415 use-defined-operator -> defined-unary-op | defined-binary-op
 useDefinedOperator: definedUnaryOp | definedBinaryOp;
 
-// R1416 submodule -> submodule-stmt [specification-part] [module-subprogram-part]
-// end-submodule-stmt
+// R1416 submodule ->
+//         submodule-stmt [specification-part] [module-subprogram-part]
+//         end-submodule-stmt
 submodule:
-	submoduleStmt specificationPart? moduleSubprogramPart? endSubmoduleStmt;
+    submoduleStmt specificationPart? moduleSubprogramPart? endSubmoduleStmt;
 
 // R1417 submodule-stmt -> SUBMODULE ( parent-identifier ) submodule-name
-submoduleStmt:
-	'SUBMODULE' '(' parentIdentifier ')' submoduleName;
+submoduleStmt: 'SUBMODULE' '(' parentIdentifier ')' submoduleName;
 
 // R1418 parent-identifier -> ancestor-module-name [: parent-submodule-name]
 parentIdentifier: ancestorModuleName (':' parentSubmoduleName)?;
@@ -2278,203 +2277,219 @@ blockDataStmt: 'BLOCK' 'DATA' blockDataName?;
 // R1422 end-block-data-stmt -> END [BLOCK DATA [block-data-name]]
 endBlockDataStmt: 'END' ('BLOCK' 'DATA' blockDataName?)?;
 
-// R1501 interface-block -> interface-stmt [interface-specification]... end-interface-stmt
+
+// R1501 interface-block ->
+//         interface-stmt [interface-specification]... end-interface-stmt
 interfaceBlock:
-	interfaceStmt interfaceSpecification* endInterfaceStmt;
+    interfaceStmt interfaceSpecification* endInterfaceStmt;
 
 // R1502 interface-specification -> interface-body | procedure-stmt
-interfaceSpecification: interfaceBody | procedureStmt;
+interfaceSpecification:
+    interfaceBody | procedureStmt;
 
 // R1503 interface-stmt -> INTERFACE [generic-spec] | ABSTRACT INTERFACE
 interfaceStmt:
-	'INTERFACE' genericSpec?
-	| 'ABSTRACT' 'INTERFACE';
+    'INTERFACE' genericSpec? |
+    'ABSTRACT' 'INTERFACE';
 
 // R1504 end-interface-stmt -> END INTERFACE [generic-spec]
-endInterfaceStmt: 'END' 'INTERFACE' genericSpec?;
+endInterfaceStmt:
+    'END' 'INTERFACE' genericSpec?;
 
-// R1505 interface-body -> function-stmt [specification-part] end-function-stmt | subroutine-stmt
-// [specification-part] end-subroutine-stmt
+// R1505 interface-body ->
+//         function-stmt [specification-part] end-function-stmt |
+//         subroutine-stmt [specification-part] end-subroutine-stmt
 interfaceBody:
-	functionStmt specificationPart? endFunctionStmt
-	| subroutineStmt specificationPart? endSubroutineStmt;
+    functionStmt specificationPart? endFunctionStmt |
+    subroutineStmt specificationPart? endSubroutineStmt;
 
 // R1506 procedure-stmt -> [MODULE] PROCEDURE [::] specific-procedure-list
 procedureStmt:
-	('MODULE')? 'PROCEDURE' '::'? specificProcedureList;
+    ('MODULE')? 'PROCEDURE' '::'? specificProcedureList;
 
 // R1507 specific-procedure -> procedure-name
-specificProcedure: procedureName;
+specificProcedure:
+    procedureName;
 
-// R1508 generic-spec -> generic-name | OPERATOR ( defined-operator ) | ASSIGNMENT ( = ) |
-// defined-io-generic-spec
+// R1508 generic-spec ->
+//         generic-name | OPERATOR ( defined-operator ) |
+//         ASSIGNMENT ( = ) | defined-io-generic-spec
 genericSpec:
-	genericName
-	| 'OPERATOR' '(' definedOperator ')'
-	| 'ASSIGNMENT' '(' '=' ')'
-	| definedIOGenericSpec;
+    genericName |
+    'OPERATOR' '(' definedOperator ')' |
+    'ASSIGNMENT' '(' '=' ')' |
+    definedIOGenericSpec;
 
-// R1509 defined-io-generic-spec -> READ ( FORMATTED ) | READ ( UNFORMATTED ) | WRITE ( FORMATTED )
-// | WRITE ( UNFORMATTED )
+// R1509 defined-io-generic-spec ->
+//         READ ( FORMATTED ) | READ ( UNFORMATTED ) |
+//         WRITE ( FORMATTED ) | WRITE ( UNFORMATTED )
 definedIOGenericSpec:
-	'READ' '(' 'FORMATTED' ')'
-	| 'READ' '(' 'UNFORMATTED' ')'
-	| 'WRITE' '(' 'FORMATTED' ')'
-	| 'WRITE' '(' 'UNFORMATTED' ')';
+    'READ' '(' 'FORMATTED' ')' |
+    'READ' '(' 'UNFORMATTED' ')' |
+    'WRITE' '(' 'FORMATTED' ')' |
+    'WRITE' '(' 'UNFORMATTED' ')';
 
-// R1510 generic-stmt -> GENERIC [, access-spec] :: generic-spec => specific-procedure-list
+// R1510 generic-stmt ->
+//         GENERIC [, access-spec] :: generic-spec => specific-procedure-list
 genericStmt:
-	'GENERIC' (',' accessSpec)? '::' genericSpec '=>' specificProcedureList;
+    'GENERIC' (',' accessSpec)? '::' genericSpec '=>' specificProcedureList;
 
 // R1511 external-stmt -> EXTERNAL [::] external-name-list
-externalStmt: 'EXTERNAL' '::'? externalNameList;
+externalStmt:
+    'EXTERNAL' '::'? externalNameList;
 
-// R1512 procedure-declaration-stmt -> PROCEDURE ( [proc-interface] ) [[, proc-attr-spec]... ::]
-// proc-decl-list
+// R1512 procedure-declaration-stmt ->
+//         PROCEDURE ( [proc-interface] ) [[, proc-attr-spec]... ::]
+//         proc-decl-list
 procedureDeclarationStmt:
-	'PROCEDURE' '(' procInterface? ')' ((',' procAttrSpec)* '::')?;
+    'PROCEDURE' '(' procInterface? ')' ((',' procAttrSpec)* '::')?;
 
 // R1513 proc-interface -> interface-name | declaration-type-spec
 procInterface: interfaceName | declarationTypeSpec;
 
-// R1514 proc-attr-spec -> access-spec | proc-language-binding-spec | INTENT ( intent-spec ) |
-// OPTIONAL | POINTER | PROTECTED | SAVE
+// R1514 proc-attr-spec ->
+//         access-spec | proc-language-binding-spec | INTENT ( intent-spec ) |
+//         OPTIONAL | POINTER | PROTECTED | SAVE
 procAttrSpec:
-	accessSpec
-	| procLanguageBindingSpec
-	| 'INTENT' '(' intentSpec ')'
-	| 'OPTIONAL'
-	| 'POINTER'
-	| 'PROTECTED'
-	| 'SAVE';
+    accessSpec | procLanguageBindingSpec | 'INTENT' '(' intentSpec ')' |
+    'OPTIONAL' | 'POINTER' | 'PROTECTED' | 'SAVE';
 
 // R1515 proc-decl -> procedure-entity-name [=> proc-pointer-init]
-procDecl: procedureEntityName ('=>' procPointerInit)?;
+procDecl:
+    procedureEntityName ('=>' procPointerInit)?;
 
 // R1516 interface-name -> name
-interfaceName: name;
+interfaceName:
+    name;
 
 // R1517 proc-pointer-init -> null-init | initial-proc-target
-procPointerInit: nullInit | initialProcTarget;
+procPointerInit:
+    nullInit | initialProcTarget;
 
 // R1518 initial-proc-target -> procedure-name
-initialProcTarget: procedureName;
+initialProcTarget:
+    procedureName;
 
 // R1519 intrinsic-stmt -> INTRINSIC [::] intrinsic-procedure-name-list
-intrinsicStmt: 'INTRINSIC' '::'? intrinsicProcedureNameList;
+intrinsicStmt:
+    'INTRINSIC' '::'? intrinsicProcedureNameList;
 
-// R1520 function-reference -> procedure-designator ( [actual-arg-spec-list]
-functionReference: procedureDesignator '(' (actualArgSpecList)?;
+// R1520 function-reference -> procedure-designator ( [actual-arg-spec-list] )
+//LEFT RECURSION RESOLVED
+functionReference:
+    procedureDesignator '(' actualArgSpecList? ')';
 
 // R1521 call-stmt -> CALL procedure-designator [( [actual-arg-spec-list] )]
 callStmt:
-	'CALL' procedureDesignator ('(' (actualArgSpecList)? ')')?;
+    'CALL' procedureDesignator ('(' actualArgSpecList? ')')?;
 
-// R1522 procedure-designator -> procedure-name | proc-component-ref | data-ref % binding-name
+// R1522 procedure-designator ->
+//         procedure-name | proc-component-ref | data-ref % binding-name
+//LEFT RECURSION RESOLVED
 procedureDesignator:
-	procedureName
-	| procComponentRef
-	| dataRef '%' bindingName;
+    procedureName | procComponentRef | dataRef '%' bindingName;
 
 // R1523 actual-arg-spec -> [keyword =] actual-arg
-actualArgSpec: (keyword '=')? actualArg;
+actualArgSpec:
+    (keyword '=')? actualArg;
 
-// R1524 actual-arg -> expr | variable | procedure-name | proc-component-ref | alt-return-spec
+// R1524 actual-arg ->
+//         expr | variable | procedure-name | proc-component-ref | alt-return-spec
 actualArg:
-	expr
-	| variable
-	| procedureName
-	| procComponentRef
-	| altReturnSpec;
+    expr | variable | procedureName | procComponentRef | altReturnSpec;
 
 // R1525 alt-return-spec -> * label
-altReturnSpec: '*' label;
+altReturnSpec:
+    '*' label;
 
 // R1526 prefix -> prefix-spec [prefix-spec]...
-prefix: prefixSpec+;
+prefix:
+    prefixSpec+;
 
-// R1527 prefix-spec -> declaration-type-spec | ELEMENTAL | IMPURE | MODULE | NON_RECURSIVE | PURE |
-// RECURSIVE
+// R1527 prefix-spec ->
+//         declaration-type-spec | ELEMENTAL | IMPURE | MODULE | NON_RECURSIVE |
+//         PURE | RECURSIVE	
 prefixSpec:
-	declarationTypeSpec
-	| 'ELEMENTAL'
-	| 'IMPURE'
-	| 'MODULE'
-	| 'NON_RECURSIVE'
-	| 'PURE'
-	| 'RECURSIVE';
+    declarationTypeSpec | 'ELEMENTAL' | 'IMPURE' | 'MODULE' | 'NON_RECURSIVE' |
+    'PURE' | 'RECURSIVE';
 
 // R1528 proc-language-binding-spec -> language-binding-spec
-procLanguageBindingSpec: languageBindingSpec;
+procLanguageBindingSpec:
+    languageBindingSpec;
 
-// R1529 function-subprogram -> function-stmt [specification-part] [execution-part]
-// [internal-subprogram-part] end-function-stmt
+// R1529 function-subprogram ->
+//         function-stmt [specification-part] [execution-part]
+//         [internal-subprogram-part] end-function-stmt
 functionSubprogram:
-	functionStmt (specificationPart)? (executionPart)? (
-		internalSubprogramPart
-	)? endFunctionStmt;
+    functionStmt (specificationPart)? (executionPart)? (internalSubprogramPart)? endFunctionStmt;
 
-// R1530 function-stmt -> [prefix] FUNCTION function-name ( [dummy-arg-name-list] ) [suffix]
+// R1530 function-stmt ->
+//         [prefix] FUNCTION function-name ( [dummy-arg-name-list] ) [suffix]
 functionStmt:
-	(prefix)? 'FUNCTION' functionName '(' (dummyArgNameList)? ')' (
-		suffix
-	)?;
+    (prefix)? 'FUNCTION' functionName '(' (dummyArgNameList)? ')' (suffix)?;
 
 // R1531 dummy-arg-name -> name
-dummyArgName: name;
+dummyArgName:
+    name;
 
-// R1532 suffix -> proc-language-binding-spec [RESULT ( result-name )] | RESULT ( result-name )
-// [proc-language-binding-spec]
+// R1532 suffix ->
+//         proc-language-binding-spec [RESULT ( result-name )] |
+//         RESULT ( result-name ) [proc-language-binding-spec]
 suffix:
-	procLanguageBindingSpec ('RESULT' '(' resultName ')')?
-	| 'RESULT' '(' resultName ')' procLanguageBindingSpec?;
+    procLanguageBindingSpec ( 'RESULT' '(' resultName ')' )? |
+    'RESULT' '(' resultName ')' procLanguageBindingSpec?;
 
 // R1533 end-function-stmt -> END [FUNCTION [function-name]]
-endFunctionStmt: 'END' ('FUNCTION' (functionName)?)?;
+endFunctionStmt:
+    'END' ('FUNCTION' (functionName)?)?;
 
-// R1534 subroutine-subprogram -> subroutine-stmt [specification-part] [execution-part]
-// [internal-subprogram-part] end-subroutine-stmt
+// R1534 subroutine-subprogram ->
+//         subroutine-stmt [specification-part] [execution-part]
+//         [internal-subprogram-part] end-subroutine-stmt
 subroutineSubprogram:
-	subroutineStmt (specificationPart)? (executionPart)? (
-		internalSubprogramPart
-	)? endSubroutineStmt;
+    subroutineStmt (specificationPart)? (executionPart)? (internalSubprogramPart)? endSubroutineStmt;
 
-// R1535 subroutine-stmt -> [prefix] SUBROUTINE subroutine-name [( [dummy-arg-list] )
-// [proc-language-binding-spec]]
+// R1535 subroutine-stmt ->
+//         [prefix] SUBROUTINE subroutine-name
+//         [( [dummy-arg-list] ) [proc-language-binding-spec]]
 subroutineStmt:
-	(prefix)? 'SUBROUTINE' subroutineName (
-		'(' (dummyArgList)? ')'
-	)? (procLanguageBindingSpec)?;
+    (prefix)? 'SUBROUTINE' subroutineName ('(' (dummyArgList)? ')')? (procLanguageBindingSpec)?;
 
 // R1536 dummy-arg -> dummy-arg-name | *
-dummyArg: dummyArgName | '*';
+dummyArg:
+    dummyArgName | '*';
 
 // R1537 end-subroutine-stmt -> END [SUBROUTINE [subroutine-name]]
-endSubroutineStmt: 'END' ('SUBROUTINE' (subroutineName)?)?;
+endSubroutineStmt:
+    'END' ('SUBROUTINE' (subroutineName)?)?;
 
-// R1538 separate-module-subprogram -> mp-subprogram-stmt [specification-part] [execution-part]
-// [internal-subprogram-part] end-mp-subprogram-stmt
+// R1538 separate-module-subprogram ->
+//         mp-subprogram-stmt [specification-part] [execution-part]
+//         [internal-subprogram-part] end-mp-subprogram-stmt
 separateModuleSubprogram:
-	mpSubprogramStmt (specificationPart)? (executionPart)? (
-		internalSubprogramPart
-	)? endMpSubprogramStmt;
+    mpSubprogramStmt (specificationPart)? (executionPart)? (internalSubprogramPart)? endMpSubprogramStmt;
 
 // R1539 mp-subprogram-stmt -> MODULE PROCEDURE procedure-name
-mpSubprogramStmt: 'MODULE' 'PROCEDURE' procedureName;
+mpSubprogramStmt:
+    'MODULE' 'PROCEDURE' procedureName;
 
 // R1540 end-mp-subprogram-stmt -> END [PROCEDURE [procedure-name]]
-endMpSubprogramStmt: 'END' ('PROCEDURE' (procedureName)?)?;
+endMpSubprogramStmt:
+    'END' ('PROCEDURE' (procedureName)?)?;
 
 // R1541 entry-stmt -> ENTRY entry-name [( [dummy-arg-list] ) [suffix]]
 entryStmt:
-	'ENTRY' entryName ('(' (dummyArgList)? ')')? (suffix)?;
+    'ENTRY' entryName ('(' (dummyArgList)? ')')? (suffix)?;
 
 // R1542 return-stmt -> RETURN [scalar-int-expr]
-returnStmt: 'RETURN' (scalarIntExpr)?;
+returnStmt:
+    'RETURN' (scalarIntExpr)?;
 
 // R1543 contains-stmt -> CONTAINS
-containsStmt: 'CONTAINS';
+containsStmt:
+    'CONTAINS';
 
-// R1544 stmt-function-stmt -> function-name ( [dummy-arg-name-list] ) = scalar-expr
+// R1544 stmt-function-stmt ->
+//         function-name ( [dummy-arg-name-list] ) = scalar-expr
 stmtFunctionStmt:
-	functionName '(' (dummyArgNameList)? ')' '=' scalarExpr;
+    functionName '(' (dummyArgNameList)? ')' '=' scalarExpr;
