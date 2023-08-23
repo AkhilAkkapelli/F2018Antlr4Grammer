@@ -11,17 +11,19 @@ WS: [ \t\r\n]+ -> skip;
 
 
 // R0001 Digit -> 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
-digit: DIGIT;
 DIGIT: '0'..'9';
 
 // R0002 Letter ->
 //         A | B | C | D | E | F | G | H | I | J | K | L | M |
 //         N | O | P | Q | R | S | T | U | V | W | X | Y | Z
-letter: LETTER;
 LETTER: 'A'..'Z' | 'a'..'z';
 
+// R601 alphanumeric-character -> letter | digit | underscore
+ALPHANUMERICCHARACTER: LETTER | DIGIT | UNDERSCORE;
+
+
 //R0003 RepChar
-repChar: NON_CONTROL_CHAR | ESCAPE_SEQUENCE;
+REPCHAR: NON_CONTROL_CHAR | ESCAPE_SEQUENCE;
 NON_CONTROL_CHAR: ~[\u0000-\u001F];
 ESCAPE_SEQUENCE: '\\' ('\\' | 'n' | 't' | '"');
 
@@ -170,7 +172,7 @@ PUBLIC: 'PUBLIC' | 'Public' | 'public';
 
 BIND: 'BIND' | 'Bind' | 'bind';
 
-NAME: 'NAME' | 'Name' | 'name';
+NAAM: 'NAME' | 'Name' | 'name';
 
 DOUBLEDOT: '..';
 
@@ -532,6 +534,7 @@ RETURN: 'RETURN' | 'Return' | 'return';
 
 CONTAINS: 'CONTAINS' | 'Contains' | 'contains';
 
+// R602 UNDERSCORE -> _
 UNDERSCORE: '_';
 
 
@@ -704,105 +707,105 @@ actualArgSpecList: (actualArgSpec)+;
 dummyArgList: (dummyArg)+;
 
 // R402 xyz-name -> name
-typeName: name;
+typeName: NAME;
 
-typeParamName: name;
+typeParamName: NAME;
 
-parentTypeName: name;
+parentTypeName: NAME;
 
-componentName: name;
+componentName: NAME;
 
-argName: name;
+argName: NAME;
 
-bindingName: name;
+bindingName: NAME;
 
-procedureName: name;
+procedureName: NAME;
 
-finalSubroutineName: name;
+finalSubroutineName: NAME;
 
-functionName: name;
+functionName: NAME;
 
-accessName: name;
+accessName: NAME;
 
-entityName: name;
+entityName: NAME;
 
-commonBlockName: name;
+commonBlockName: NAME;
 
-coarrayName: name;
+coarrayName: NAME;
 
-arrayName: name;
+arrayName: NAME;
 
-procEntityName: name;
+procEntityName: NAME;
 
-namelistGroupName: name;
+namelistGroupName: NAME;
 
-importName: name;
+importName: NAME;
 
-partName: name;
+partName: NAME;
 
-dataPointerComponentName: name;
+dataPointerComponentName: NAME;
 
-associateName: name;
+associateName: NAME;
 
-procedureComponentName: name;
+procedureComponentName: NAME;
 
-whereConstructName: name;
+whereConstructName: NAME;
 
-forallConstructName: name;
+forallConstructName: NAME;
 
-associateConstructName: name;
+associateConstructName: NAME;
 
-blockConstructName: name;
+blockConstructName: NAME;
 
-teamConstructName: name;
+teamConstructName: NAME;
 
-criticalConstructName: name;
+criticalConstructName: NAME;
 
-doConstructName: name;
+doConstructName: NAME;
 
-indexName: name;
+indexName: NAME;
 
-ifConstructName: name;
+ifConstructName: NAME;
 
-caseConstructName: name;
+caseConstructName: NAME;
 
-selectConstructName: name;
+selectConstructName: NAME;
 
-constructName: name;
+constructName: NAME;
 
-moduleName: name;
+moduleName: NAME;
 
-programName: name;
+programName: NAME;
 
-localName: name;
+localName: NAME;
 
-blockDataName: name;
+blockDataName: NAME;
 
-genericName: name;
+genericName: NAME;
 
-useName: name;
+useName: NAME;
 
-submoduleName: name;
+submoduleName: NAME;
 
-ancestorModuleName: name;
+ancestorModuleName: NAME;
 
-parentSubmoduleName: name;
+parentSubmoduleName: NAME;
 
-procedureEntityName: name;
+procedureEntityName: NAME;
 
-externalName: name;
+externalName: NAME;
 
-intrinsicProcedureName: name;
+intrinsicProcedureName: NAME;
 
-resultName: name;
+resultName: NAME;
 
-subroutineName: name;
+subroutineName: NAME;
 
-entryName: name;
+entryName: NAME;
 
-intConstantName: name;
+intConstantName: NAME;
 
-intVariableName: name;
+intVariableName: NAME;
 
 // R403 scalar-xyz -> xyz
 scalarIntExpr: intExpr;
@@ -1008,17 +1011,11 @@ actionStmt:
 	| forallStmt;
 
 // R516 keyword -> name
-keyword: name;
+keyword: NAME;
 
-
-// R601 alphanumeric-character -> letter | digit | underscore
-alphanumericCharacter: LETTER | DIGIT | UNDERSCORE;
-
-// R602 UNDERSCORE -> _
-underscore: UNDERSCORE;
 
 // R603 name -> letter [alphanumeric-character]...
-name: letter (alphanumericCharacter)*;
+NAME: LETTER (ALPHANUMERICCHARACTER)*;
 
 // R604 constant -> literal-constant | named-constant
 constant: literalConstant | namedConstant;
@@ -1034,7 +1031,7 @@ literalConstant:
 	| bozLiteralConstant;
 
 // R606 named-constant -> name
-namedConstant: name;
+namedConstant: NAME;
 
 // R607 int-constant -> constant
 intConstant: constant;
@@ -1062,7 +1059,7 @@ definedOperator:
 extendedIntrinsicOp: intrinsicOperator;
 
 // R611 label -> digit [digit]...
-label: digit (digit)*;
+label: DIGIT+;
 
 // R620 delimiter -> ( | ) | / | [ | ] | (/ | /)
 delimiter: LPAREN | RPAREN | SLASH | LBRACKET | RBRACKET | LPARENSLASH | RPARENSLASH;
@@ -1114,7 +1111,7 @@ kindParam: digitString | scalarIntConstantName;
 signedDigitString: sign? digitString;
 
 // R711 digit-string -> digit [digit]...
-digitString: digit (digit)*;
+digitString: DIGIT+;
 
 // R712 sign -> + | -
 sign: PLUS | MINUS;
@@ -1170,8 +1167,8 @@ lengthSelector:
 charLength: LPAREN typeParamValue RPAREN | digitString;
 
 // R724 char-literal-constant -> [kind-param _] ' [rep-char]... ' | [kind-param _] " [rep-char]... "
-charLiteralConstant: (kindParam UNDERSCORE)? APOSTROPHE (repChar)* APOSTROPHE
-	| (kindParam UNDERSCORE)? QUOTE (repChar)* QUOTE;
+charLiteralConstant: (kindParam UNDERSCORE)? APOSTROPHE (REPCHAR)* APOSTROPHE
+	| (kindParam UNDERSCORE)? QUOTE (REPCHAR)* QUOTE;
 
 // R725 logical-literal-constant -> .TRUE. [_ kind-param] | .FALSE. [_ kind-param]
 logicalLiteralConstant:
@@ -1345,16 +1342,16 @@ bozLiteralConstant:
 	| hexConstant;
 
 // R765 binary-constant -> B ' digit [digit]... ' | B " digit [digit]... "
-binaryConstant: B '\'' digit+ '\'' | B '"' digit+ '"';
+binaryConstant: B '\'' DIGIT+ '\'' | B '"' DIGIT+ '"';
 
 // R766 octal-constant -> O ' digit [digit]... ' | O " digit [digit]... "
-octalConstant: O '\'' digit+ '\'' | O '"' digit+ '"';
+octalConstant: O '\'' DIGIT+ '\'' | O '"' DIGIT+ '"';
 
 // R767 hex-constant -> Z ' hex-digit [hex-digit]... ' | Z " hex-digit [hex-digit]... "
 hexConstant: Z '\'' hexDigit+ '\'' | Z '"' hexDigit+ '"';
 
 // R768 hex-digit -> digit | A | B | C | D | E | F
-hexDigit: digit | A | B | C | D | E | F;
+hexDigit: DIGIT | A | B | C | D | E | F;
 
 // R769 array-constructor -> (/ ac-spec /) | lbracket ac-spec rbracket
 arrayConstructor: LPARENSLASH acSpec RPARENSLASH | lbracket acSpec rbracket;
@@ -1418,7 +1415,7 @@ entityDecl:
 	| functionName (ASTERIK charLength)?;
 
 // R804 object-name -> name
-objectName: name;
+objectName: NAME;
 
 // R805 initialization -> = constant-expr | => null-init | => initial-data-target
 initialization:
@@ -1612,7 +1609,7 @@ savedEntity:
 	| SLASH commonBlockName SLASH;
 
 // R858 proc-pointer-name -> name
-procPointerName: name;
+procPointerName: NAME;
 
 // R859 target-stmt -> TARGET [::] target-decl-list
 targetStmt: TARGET DOUBLECOLON? targetDeclList;
@@ -1636,7 +1633,7 @@ implicitStmt:
 implicitSpec: declarationTypeSpec LPAREN letterSpecList RPAREN;
 
 // R865 letter-spec -> letter [- letter]
-letterSpec: letter (MINUS letter)?;
+letterSpec: LETTER (MINUS LETTER)?;
 
 // R866 implicit-name-spec -> EXTERNAL | TYPE
 implicitNameSpec: EXTERNAL | TYPE;
@@ -1694,7 +1691,7 @@ designator: objectName | arrayElement | dataRef (LPAREN substringRange RPAREN)? 
 variable: designator | functionReference;
 
 // R903 variable-name -> name
-variableName: name;
+variableName: NAME;
 
 // R904 logical-variable -> variable
 logicalVariable: variable;
@@ -1861,7 +1858,7 @@ primary:
 level1Expr: definedUnaryOp? primary;
 
 // R1003 defined-unary-op -> . letter [letter]... .
-definedUnaryOp: DOT letter+ DOT;
+definedUnaryOp: DOT LETTER+ DOT;
 
 // R1004 mult-operand -> level-1-expr [power-op mult-operand]
 multOperand:
@@ -1934,7 +1931,7 @@ equivOp: EQV | NEQV;
 expr: level5Expr | expr definedBinaryOp level5Expr;
 
 // R1023 defined-binary-op -> . letter [letter]... .
-definedBinaryOp: DOT letter (letter)* DOT;
+definedBinaryOp: DOT LETTER+ DOT;
 
 // R1024 logical-expr -> expr
 logicalExpr: expr;
@@ -2586,7 +2583,7 @@ inquireSpec:
     ID ASSIGN scalarIntExpr |
     IOMSG ASSIGN iomsgVariable |
     IOSTAT ASSIGN scalarIntVariable |
-    NAME ASSIGN scalarDefaultCharVariable |
+    NAAM ASSIGN scalarDefaultCharVariable |
     NAMED ASSIGN scalarLogicalVariable |
     NEXTREC ASSIGN scalarIntVariable |
     NUMBER ASSIGN scalarIntVariable |
@@ -2873,8 +2870,7 @@ procDecl:
     procedureEntityName (IMPLIES procPointerInit)?;
 
 // R1516 interface-name -> name
-interfaceName:
-    name;
+interfaceName: NAME;
 
 // R1517 proc-pointer-init -> null-init | initial-proc-target
 procPointerInit:
@@ -2942,8 +2938,7 @@ functionStmt:
     (prefix)? FUNCTION functionName LPAREN (dummyArgNameList)? RPAREN (suffix)?;
 
 // R1531 dummy-arg-name -> name
-dummyArgName:
-    name;
+dummyArgName: NAME;
 
 // R1532 suffix ->
 //         proc-language-binding-spec [RESULT ( result-name )] |
